@@ -18,8 +18,7 @@ Install application
 
 Start Application
 
-- Create a local environment file (customize according to your needs) from the provided template: `cp grm/.example.env grm/.env`. For example fill database credentials. Create the appropriate couchdb databases (db, adb, grm, grmabd)
-- Do the same for `local_settings.py`: `cp grm/local_settings_template.py grm/local_settings.py`
-
+- Create a local environment file (customize according to your needs) from the provided template: `cp grm/.example.env grm/.env`. For example fill database credentials. Create the appropriate couchdb databases (administrative_levels, adb, grm, grmabd)
+- Do the same for `local_settings.py`: `cp grm/local_settings_template.py grm/local_settings.py` and update if needed.
 - `python3 manage.py migrate`
 - `python3 manage.py runserver`
