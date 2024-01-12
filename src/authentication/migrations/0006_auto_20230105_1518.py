@@ -4,18 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('authentication', '0005_cdata_pdata'),
+        ("authentication", "0005_cdata_pdata"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='cdata',
-            options={'verbose_name_plural': 'Cdata'},
+            name="cdata",
+            options={"verbose_name_plural": "Cdata"},
         ),
         migrations.AlterModelOptions(
-            name='pdata',
-            options={'verbose_name_plural': 'Pdata'},
+            name="pdata",
+            options={"verbose_name_plural": "Pdata"},
         ),
     ]

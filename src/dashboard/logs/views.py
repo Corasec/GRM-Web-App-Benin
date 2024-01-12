@@ -6,6 +6,6 @@ from dashboard.mixins import PageMixin
 
 
 class DashboardTemplateView(PageMixin, LoginRequiredMixin, generic.TemplateView):
-    template_name = 'common/under_construction.html'
-    title = _('Logs')
-    active_level1 = 'logs'
+    template_name = "common/under_construction.html"
+    title = _("Logs")
+    active_level1 = "logs"

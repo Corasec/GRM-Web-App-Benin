@@ -9,10 +9,6 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
 def send_sms(to, from_=TWILIO_FROM_NUMBER, body=None):
-    client.messages.create(
-        to=to,
-        from_=from_,
-        body=body
-    )
+    client.messages.create(to=to, from_=from_, body=body)
 
     # print(message.sid)

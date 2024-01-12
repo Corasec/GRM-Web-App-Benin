@@ -1,3 +1,3 @@
-ANAFIC = 'anafic'
-ADL = 'adl'
-MAJOR = 'major'
+ANAFIC = "anafic"
+ADL = "adl"
+MAJOR = "major"

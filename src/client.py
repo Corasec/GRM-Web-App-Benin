@@ -9,7 +9,13 @@ COUCHDB_URL = settings.COUCHDB_URL
 
 
 def get_db(db=COUCHDB_DATABASE):
-    client = CouchDB(COUCHDB_USERNAME, COUCHDB_PASSWORD, url=COUCHDB_URL, connect=True, auto_renew=True)
+    client = CouchDB(
+        COUCHDB_USERNAME,
+        COUCHDB_PASSWORD,
+        url=COUCHDB_URL,
+        connect=True,
+        auto_renew=True,
+    )
     return client[db]
 
 
@@ -22,7 +28,7 @@ def upload_file(file, db=COUCHDB_ATTACHMENT_DATABASE):
 def bulk_delete(db_client, documents):
     docs_to_delete = list()
     for d in documents:
-        d['_deleted'] = True
+        d["_deleted"] = True
         docs_to_delete.append(d)
     return db_client.bulk_docs(docs_to_delete)
 
