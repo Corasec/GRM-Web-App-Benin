@@ -17,6 +17,15 @@ import environ
 from django.conf import global_settings
 from django.utils.translation import gettext_lazy as _
 
+
+try:
+    from .local_settings import *  # noqa: F403
+except ImportError:
+    from .local_settings_template import *  # noqa: F403
+
+    print("No local_settings.py, using .local_settings_template")
+
+
 # https://django-environ.readthedocs.io/en/latest/
 env = environ.Env()
 env.read_env()
@@ -59,9 +68,9 @@ THIRD_PARTY_APPS = [
     'django_celery_results'
 ]
 
-INSTALLED_APPS += CREATED_APPS + THIRD_PARTY_APPS
+INSTALLED_APPS += CREATED_APPS + THIRD_PARTY_APPS + LOCAL_INSTALLED_APPS
 
-MIDDLEWARE = [
+MIDDLEWARE = LOCAL_MIDDLEWARE + [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
