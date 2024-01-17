@@ -22,3 +22,7 @@ Start Application
 - Do the same for `local_settings.py`: `cp grm/local_settings_template.py grm/local_settings.py` and update if needed.
 - `python3 manage.py migrate`
 - `python3 manage.py runserver`
+
+Configuration
+
+- With the help of the proper specialists update the files in `couchdb/jsonCollections` folder and create the appropriate docs. The file are named following this structure `database_document_type.json`. For ex `grm_issue_age_group.json` contains multiple documents from `issue_age_group` type that will be created in the `grm` database. You can create the documents mannually or use a script (`Postman` can be useful here).
