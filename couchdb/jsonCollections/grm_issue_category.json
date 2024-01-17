@@ -223,19 +223,19 @@
       "confidentiality_level": "",
       "redirection_protocol": 1,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
         "administrative_level": "village"
       },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
-      },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 9,
@@ -250,19 +250,19 @@
       "confidentiality_level": "",
       "redirection_protocol": 1,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
         "administrative_level": "village"
       },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
-      },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 10,
@@ -277,19 +277,19 @@
       "confidentiality_level": "",
       "redirection_protocol": 1,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
         "administrative_level": "village"
       },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
-      },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 11,
@@ -304,19 +304,19 @@
       "confidentiality_level": "",
       "redirection_protocol": 1,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
         "administrative_level": "village"
       },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
-      },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 12,
@@ -331,19 +331,19 @@
       "confidentiality_level": "",
       "redirection_protocol": 1,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
         "administrative_level": "village"
       },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
-      },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 13,
@@ -358,19 +358,19 @@
       "confidentiality_level": "",
       "redirection_protocol": 1,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
         "administrative_level": "village"
       },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
-      },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 14,
@@ -385,19 +385,19 @@
       "confidentiality_level": "",
       "redirection_protocol": 1,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
         "administrative_level": "village"
       },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
-      },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 15,
@@ -412,19 +412,19 @@
       "confidentiality_level": "Confidential",
       "redirection_protocol": 0,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
-        "administrative_level": "country"
-      },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
+        "administrative_level": "village"
       },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 16,
@@ -433,25 +433,25 @@
     },
     {
       "id": 17,
-      "label": "Les cas de violence basée sur le genre et plus précisément d’exploitation et abus sexuels et de harcèlement sexuel",
-      "name": "Les cas de violence basée sur le genre et plus précisément d’exploitation et abus sexuels et de harcèlement sexuel",
+      "label": "Les cas de violence basée sur le genre et plus précisément d'exploitation et abus sexuels et de harcèlement sexuel",
+      "name": "Les cas de violence basée sur le genre et plus précisément d'exploitation et abus sexuels et de harcèlement sexuel",
       "abbreviation": "M&PVCC",
       "confidentiality_level": "Confidential",
       "redirection_protocol": 0,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
-        "administrative_level": "country"
-      },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
+        "administrative_level": "village"
       },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 17,
@@ -460,25 +460,25 @@
     },
     {
       "id": 18,
-      "label": "L’embauche de mineur-e-s sur les chantiers",
-      "name": "L’embauche de mineur-e-s sur les chantiers",
+      "label": "L'embauche de mineur-e-s sur les chantiers",
+      "name": "L'embauche de mineur-e-s sur les chantiers",
       "abbreviation": "M&PVCC",
       "confidentiality_level": "Confidential",
       "redirection_protocol": 0,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
-        "administrative_level": "country"
-      },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
+        "administrative_level": "village"
       },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 18,
@@ -493,19 +493,19 @@
       "confidentiality_level": "",
       "redirection_protocol": 1,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
         "administrative_level": "village"
       },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
-      },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 19,
@@ -514,78 +514,78 @@
     },
     {
       "id": 20,
-      "label": "Les cas d’incidents et accidents (hommes et animaux)",
-      "name": "Les cas d’incidents et accidents (hommes et animaux)",
+      "label": "Les cas d'incidents et accidents (hommes et animaux)",
+      "name": "Les cas d'incidents et accidents (hommes et animaux)",
       "abbreviation": "M&PVCC",
       "confidentiality_level": "Confidential",
       "redirection_protocol": 0,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
-        "administrative_level": "country"
-      },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
+        "administrative_level": "village"
       },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "value": 20,
       "parent_type": "issue_sub_type",
       "parent_id": 4
     },
-	{
+    {
       "id": 21,
-      "label": "Appréciation",
-      "name": "Appréciation",
-      "abbreviation": "M&APP",
+      "label": "Suggestions/commentaires",
+      "name": "Suggestions/commentaires",
+      "abbreviation": "M&SoC",
       "confidentiality_level": "",
       "redirection_protocol": 1,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
         "administrative_level": "village"
       },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
-      },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "parent_type": "issue_sub_type",
       "parent_id": 5
     },
-	{
+    {
       "id": 22,
-      "label": "Suggestion ou commentaire",
-      "name": "Suggestion ou commentaire",
-      "abbreviation": "M&SoC",
+      "label": "Dénonciation",
+      "name": "Dénonciation",
+      "abbreviation": "M&DEN",
       "confidentiality_level": "",
       "redirection_protocol": 1,
       "assigned_department": {
-        "name": "Comité de Gestion de Plainte",
+        "name": "Comité communautaire de gestion des plaintes",
         "id": 1,
-        "administrative_level": "region"
-      },
-      "assigned_appeal_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
-        "administrative_level": "country"
+        "administrative_level": "village"
       },
       "assigned_escalation_department": {
-        "name": "Comité de Gestion de Plainte",
-        "id": 1,
+        "name": "Comité local de gestion des plaintes",
+        "id": 2,
         "administrative_level": "commune"
+      },
+      "assigned_appeal_department": {
+        "name": "Secrétariat technique à la coordination",
+        "id": 3,
+        "administrative_level": "country"
       },
       "type": "issue_category",
       "parent_type": "issue_sub_type",
