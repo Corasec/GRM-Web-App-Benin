@@ -18,8 +18,11 @@ from grm.utils import (
     get_administrative_regions_by_level,
     get_issue_age_group_choices,
     get_issue_category_choices,
+    get_issue_citizen_group_choices,
     get_issue_citizen_group_1_choices,
     get_issue_citizen_group_2_choices,
+    get_issue_religious_affiliation,
+    get_issue_subproject_group_choices,
     get_issue_status_choices,
     get_issue_type_choices,
     get_issue_options_choices,
@@ -95,13 +98,23 @@ class NewIssuePersonForm(forms.Form):
         help_text=_("This is an optional field"),
         choices=GENDER_CHOICES,
     )
-    citizen_group_1 = forms.ChoiceField(
-        label=_("Occupancy status"),
+    citizen_group = forms.ChoiceField(
+        label=_("Socioprofessionnel group"),
         required=False,
         help_text=_("This is an optional field"),
     )
-    citizen_group_2 = forms.ChoiceField(
-        label=_("Educational level"),
+    # citizen_group_1 = forms.ChoiceField(
+    #     label=_("Occupancy status"),
+    #     required=False,
+    #     help_text=_("This is an optional field"),
+    # )
+    # citizen_group_2 = forms.ChoiceField(
+    #     label=_("Educational level"),
+    #     required=False,
+    #     help_text=_("This is an optional field"),
+    # )
+    religious_affiliation = forms.ChoiceField(
+        label=_("Religious affiliation"),
         required=False,
         help_text=_("This is an optional field"),
     )
@@ -117,13 +130,23 @@ class NewIssuePersonForm(forms.Form):
         self.fields["citizen_age_group"].widget.choices = citizen_age_groups
         self.fields["citizen_age_group"].choices = citizen_age_groups
 
-        citizen_group_1_choices = get_issue_citizen_group_1_choices(grm_db)
-        self.fields["citizen_group_1"].widget.choices = citizen_group_1_choices
-        self.fields["citizen_group_1"].choices = citizen_group_1_choices
+        citizen_group_choices = get_issue_citizen_group_choices(grm_db)
+        self.fields["citizen_group"].widget.choices = citizen_group_choices
+        self.fields["citizen_group"].choices = citizen_group_choices
 
-        citizen_group_2_choices = get_issue_citizen_group_2_choices(grm_db)
-        self.fields["citizen_group_2"].widget.choices = citizen_group_2_choices
-        self.fields["citizen_group_2"].choices = citizen_group_2_choices
+        # citizen_group_1_choices = get_issue_citizen_group_1_choices(grm_db)
+        # self.fields["citizen_group_1"].widget.choices = citizen_group_1_choices
+        # self.fields["citizen_group_1"].choices = citizen_group_1_choices
+
+        # citizen_group_2_choices = get_issue_citizen_group_2_choices(grm_db)
+        # self.fields["citizen_group_2"].widget.choices = citizen_group_2_choices
+        # self.fields["citizen_group_2"].choices = citizen_group_2_choices
+
+        religious_affiliation_choices = get_issue_religious_affiliation(grm_db)
+        self.fields[
+            "religious_affiliation"
+        ].widget.choices = religious_affiliation_choices
+        self.fields["religious_affiliation"].choices = religious_affiliation_choices
 
         document = grm_db[doc_id]
 
@@ -141,11 +164,19 @@ class NewIssuePersonForm(forms.Form):
         if "gender" in document:
             self.fields["gender"].initial = document["gender"]
 
-        if "citizen_group_1" in document and document["citizen_group_1"]:
-            self.fields["citizen_group_1"].initial = document["citizen_group_1"]["id"]
+        if "citizen_group" in document and document["citizen_group"]:
+            self.fields["citizen_group"].initial = document["citizen_group"]["id"]
 
-        if "citizen_group_2" in document and document["citizen_group_2"]:
-            self.fields["citizen_group_2"].initial = document["citizen_group_2"]["id"]
+        if "religious_affiliation" in document and document["religious_affiliation"]:
+            self.fields["religious_affiliation"].initial = document[
+                "religious_affiliation"
+            ]["id"]
+
+        # if "citizen_group_1" in document and document["citizen_group_1"]:
+        #     self.fields["citizen_group_1"].initial = document["citizen_group_1"]["id"]
+
+        # if "citizen_group_2" in document and document["citizen_group_2"]:
+        #     self.fields["citizen_group_2"].initial = document["citizen_group_2"]["id"]
 
 
 class NewIssueDetailsForm(forms.Form):
@@ -167,6 +198,11 @@ class NewIssueDetailsForm(forms.Form):
     )
     sub_component = forms.ChoiceField(
         label=_("Sub Component"),
+        required=False,
+        help_text=_("This is an optional field"),
+    )
+    subproject_group = forms.ChoiceField(
+        label=_("Subproject/investment type"),
         required=False,
         help_text=_("This is an optional field"),
     )
@@ -210,6 +246,10 @@ class NewIssueDetailsForm(forms.Form):
         self.fields["sub_component"].widget.choices = sub_components
         self.fields["sub_component"].choices = sub_components
 
+        subproject_groups = get_issue_options_choices(grm_db, "issue_subproject_group")
+        self.fields["subproject_group"].widget.choices = subproject_groups
+        self.fields["subproject_group"].choices = subproject_groups
+
         self.fields["intake_date"].widget.attrs["class"] = self.fields[
             "issue_date"
         ].widget.attrs["class"] = "form-control datetimepicker-input"
@@ -229,10 +269,13 @@ class NewIssueDetailsForm(forms.Form):
             self.fields["component"].initial = document["component"]["id"]
         if "sub_component" in document and document["sub_component"]:
             self.fields["sub_component"].initial = document["sub_component"]["id"]
+        if "subproject_group" in document and document["subproject_group"]:
+            self.fields["subproject_group"].initial = document["subproject_group"]["id"]
         if "ongoing_issue" in document:
             self.fields["ongoing_issue"].initial = document["ongoing_issue"]
 
 
+# to check
 class NewIssueLocationForm(forms.Form):
     administrative_region = forms.ChoiceField()
     administrative_region_value = forms.CharField(label="", required=False)
@@ -312,6 +355,7 @@ class SearchIssueForm(forms.Form):
         self.fields["administrative_region"].widget.attrs["class"] = "region"
 
 
+# to check
 class IssueDetailsForm(forms.Form):
     assignee = forms.ChoiceField(label=_("Assigned to"))
 
@@ -338,6 +382,7 @@ class IssueDetailsForm(forms.Form):
         self.fields["assignee"].initial = document["assignee"]["id"]
 
 
+# to check
 class IssueCommentForm(forms.Form):
     comment = forms.CharField(
         label="",
@@ -346,6 +391,7 @@ class IssueCommentForm(forms.Form):
     )
 
 
+# to check
 class IssueResearchResultForm(forms.Form):
     research_result = forms.CharField(
         label="", max_length=MAX_LENGTH, widget=forms.Textarea(attrs={"rows": "3"})
@@ -363,6 +409,7 @@ class IssueResearchResultForm(forms.Form):
         )
 
 
+# to check
 class IssueRejectReasonForm(forms.Form):
     reject_reason = forms.CharField(
         label="", max_length=MAX_LENGTH, widget=forms.Textarea(attrs={"rows": "3"})

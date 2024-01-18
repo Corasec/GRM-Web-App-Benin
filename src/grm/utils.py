@@ -70,6 +70,11 @@ def get_issue_age_group_choices(grm_db, empty_choice=True):
     return get_choices(query_result, empty_choice)
 
 
+def get_issue_citizen_group_choices(grm_db, empty_choice=True):
+    query_result = grm_db.get_query_result({"type": "issue_citizen_group"})
+    return get_choices(query_result, empty_choice)
+
+
 def get_issue_citizen_group_1_choices(grm_db, empty_choice=True):
     query_result = grm_db.get_query_result({"type": "issue_citizen_group_1"})
     return get_choices(query_result, empty_choice)
@@ -77,6 +82,16 @@ def get_issue_citizen_group_1_choices(grm_db, empty_choice=True):
 
 def get_issue_citizen_group_2_choices(grm_db, empty_choice=True):
     query_result = grm_db.get_query_result({"type": "issue_citizen_group_2"})
+    return get_choices(query_result, empty_choice)
+
+
+def get_issue_religious_affiliation(grm_db, empty_choice=True):
+    query_result = grm_db.get_query_result({"type": "issue_religious_affiliation"})
+    return get_choices(query_result, empty_choice)
+
+
+def get_issue_subproject_group_choices(grm_db, empty_choice=True):
+    query_result = grm_db.get_query_result({"type": "issue_subproject_group"})
     return get_choices(query_result, empty_choice)
 
 

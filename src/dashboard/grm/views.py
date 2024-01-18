@@ -369,6 +369,13 @@ class NewIssueMixin(LoginRequiredMixin, IssueFormMixin):
                 doc_sub_component = self.grm_db.get_query_result(
                     {"id": int(data["sub_component"]), "type": "issue_sub_component"}
                 )[0][0]
+            if "subproject_group" in data:
+                doc_subproject_group = self.grm_db.get_query_result(
+                    {
+                        "id": int(data["subproject_group"]),
+                        "type": "issue_subproject_group",
+                    }
+                )[0][0]
             department_id = doc_category["assigned_department"]["id"]
         except Exception:
             raise Http404
@@ -407,6 +414,13 @@ class NewIssueMixin(LoginRequiredMixin, IssueFormMixin):
                 "id": doc_sub_component["id"],
                 "name": doc_sub_component["name"],
             }
+
+        if doc_subproject_group:
+            self.doc["subproject_group"] = {
+                "id": doc_subproject_group["id"],
+                "name": doc_subproject_group["name"],
+            }
+
         self.doc["ongoing_issue"] = data["ongoing_issue"]
 
         self.doc.save()
@@ -436,39 +450,73 @@ class NewIssueMixin(LoginRequiredMixin, IssueFormMixin):
 
         self.doc["gender"] = data["gender"]
 
-        if data["citizen_group_1"]:
+        if data["religious_affiliation"]:
             try:
-                doc_issue_citizen_group_1 = self.grm_db.get_query_result(
+                doc_issue_religious_affiliation = self.grm_db.get_query_result(
                     {
-                        "id": int(data["citizen_group_1"]),
-                        "type": "issue_citizen_group_1",
+                        "id": int(data["religious_affiliation"]),
+                        "type": "issue_religious_affiliation",
                     }
                 )[0][0]
-                self.doc["citizen_group_1"] = {
-                    "name": doc_issue_citizen_group_1["name"],
-                    "id": doc_issue_citizen_group_1["id"],
+                self.doc["religious_affiliation"] = {
+                    "name": doc_issue_religious_affiliation["name"],
+                    "id": doc_issue_religious_affiliation["id"],
                 }
             except Exception:
                 raise Http404
         else:
-            self.doc["citizen_group_1"] = ""
+            self.doc["religious_affiliation"] = ""
 
-        if data["citizen_group_2"]:
+        if data["citizen_group"]:
             try:
-                doc_issue_citizen_group_2 = self.grm_db.get_query_result(
+                doc_issue_citizen_group = self.grm_db.get_query_result(
                     {
-                        "id": int(data["citizen_group_2"]),
-                        "type": "issue_citizen_group_2",
+                        "id": int(data["citizen_group"]),
+                        "type": "issue_citizen_group",
                     }
                 )[0][0]
-                self.doc["citizen_group_2"] = {
-                    "name": doc_issue_citizen_group_2["name"],
-                    "id": doc_issue_citizen_group_2["id"],
+                self.doc["citizen_group"] = {
+                    "name": doc_issue_citizen_group["name"],
+                    "id": doc_issue_citizen_group["id"],
                 }
             except Exception:
                 raise Http404
         else:
-            self.doc["citizen_group_2"] = ""
+            self.doc["citizen_group"] = ""
+
+        # if data["citizen_group_1"]:
+        #     try:
+        #         doc_issue_citizen_group_1 = self.grm_db.get_query_result(
+        #             {
+        #                 "id": int(data["citizen_group_1"]),
+        #                 "type": "issue_citizen_group_1",
+        #             }
+        #         )[0][0]
+        #         self.doc["citizen_group_1"] = {
+        #             "name": doc_issue_citizen_group_1["name"],
+        #             "id": doc_issue_citizen_group_1["id"],
+        #         }
+        #     except Exception:
+        #         raise Http404
+        # else:
+        #     self.doc["citizen_group_1"] = ""
+
+        # if data["citizen_group_2"]:
+        #     try:
+        #         doc_issue_citizen_group_2 = self.grm_db.get_query_result(
+        #             {
+        #                 "id": int(data["citizen_group_2"]),
+        #                 "type": "issue_citizen_group_2",
+        #             }
+        #         )[0][0]
+        #         self.doc["citizen_group_2"] = {
+        #             "name": doc_issue_citizen_group_2["name"],
+        #             "id": doc_issue_citizen_group_2["id"],
+        #         }
+        #     except Exception:
+        #         raise Http404
+        # else:
+        #     self.doc["citizen_group_2"] = ""
 
     def set_location_fields(self, data):
         try:

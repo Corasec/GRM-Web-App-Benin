@@ -49,6 +49,8 @@ class AbstractKeyData(models.Model):
 
 
 class Pdata(AbstractKeyData):
+    """Used to anonymize citizen information"""
+
     class Meta:
         verbose_name_plural = "Pdata"
 
@@ -57,6 +59,8 @@ class Pdata(AbstractKeyData):
 
 
 class Cdata(AbstractKeyData):
+    """Used to anonymize contact information"""
+
     class Meta:
         verbose_name_plural = "Cdata"
 
