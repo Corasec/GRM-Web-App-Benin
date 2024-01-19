@@ -196,11 +196,11 @@ class NewIssueDetailsForm(forms.Form):
     component = forms.ChoiceField(
         label=_("Component"), required=False, help_text=_("This is an optional field")
     )
-    sub_component = forms.ChoiceField(
-        label=_("Sub Component"),
-        required=False,
-        help_text=_("This is an optional field"),
-    )
+    # sub_component = forms.ChoiceField(
+    #     label=_("Sub Component"),
+    #     required=False,
+    #     help_text=_("This is an optional field"),
+    # )
     subproject_group = forms.ChoiceField(
         label=_("Subproject/investment type"),
         required=False,
@@ -242,9 +242,9 @@ class NewIssueDetailsForm(forms.Form):
         self.fields["component"].widget.choices = components
         self.fields["component"].choices = components
 
-        sub_components = get_issue_options_choices(grm_db, "issue_sub_component")
-        self.fields["sub_component"].widget.choices = sub_components
-        self.fields["sub_component"].choices = sub_components
+        # sub_components = get_issue_options_choices(grm_db, "issue_sub_component")
+        # self.fields["sub_component"].widget.choices = sub_components
+        # self.fields["sub_component"].choices = sub_components
 
         subproject_groups = get_issue_options_choices(grm_db, "issue_subproject_group")
         self.fields["subproject_group"].widget.choices = subproject_groups
@@ -267,8 +267,8 @@ class NewIssueDetailsForm(forms.Form):
             self.fields["issue_sub_type"].initial = document["issue_sub_type"]["id"]
         if "component" in document and document["component"]:
             self.fields["component"].initial = document["component"]["id"]
-        if "sub_component" in document and document["sub_component"]:
-            self.fields["sub_component"].initial = document["sub_component"]["id"]
+        # if "sub_component" in document and document["sub_component"]:
+        #     self.fields["sub_component"].initial = document["sub_component"]["id"]
         if "subproject_group" in document and document["subproject_group"]:
             self.fields["subproject_group"].initial = document["subproject_group"]["id"]
         if "ongoing_issue" in document:

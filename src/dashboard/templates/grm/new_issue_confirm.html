@@ -86,7 +86,7 @@
                                 {% bootstrap_field form.issue_sub_type layout='horizontal' %}
                                 {% bootstrap_field form.category layout='horizontal' %}
                                 {% bootstrap_field form.component layout='horizontal' %}
-                                {% bootstrap_field form.sub_component layout='horizontal' %}
+                                {% comment %} {% bootstrap_field form.sub_component layout='horizontal' %} {% endcomment %}
                                 <div class="row">
                                     <div class="col-md-3">
                                         <label for="id_description" class="label-align">
@@ -178,10 +178,10 @@
             placeholder: "{% translate 'Click to select an item' %}",
             allowClear: true
         });
-        $("#id_sub_component").select2({
+        {% comment %} $("#id_sub_component").select2({
             placeholder: "{% translate 'Click to select an item' %}",
             allowClear: true
-        });
+        }); {% endcomment %}
         $("#id_administrative_region").select2({
             placeholder: "{% translate 'Click to select location' %}",
             allowClear: true

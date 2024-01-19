@@ -110,11 +110,12 @@ def get_government_worker_choices(empty_choice=True):
     return choices
 
 
-def get_assignee(grm_db, eadl_db, issue_doc, errors=None):
+def get_assignee(grm_db, eadl_db, issue_doc, adm_lvl_id=None, errors=None):
     try:
         doc_category = grm_db.get_query_result(
             {"id": issue_doc["category"]["id"], "type": "issue_category"}
         )[0][0]
+        print(" we're good 1")
     except Exception:
         if errors:
             error = (
@@ -126,6 +127,7 @@ def get_assignee(grm_db, eadl_db, issue_doc, errors=None):
     assigned_department = doc_category["assigned_department"]
     department_id = assigned_department["id"]
     if doc_category["redirection_protocol"]:
+        print("redirection_protocol")
         assigned_department_level = (
             assigned_department["administrative_level"]
             if "administrative_level" in assigned_department
@@ -134,8 +136,10 @@ def get_assignee(grm_db, eadl_db, issue_doc, errors=None):
         assigned_department_level = (
             assigned_department_level.strip() if assigned_department_level else None
         )
-        administrative_id = None
+        # administrative_id = None
+        administrative_id = adm_lvl_id
         if not assigned_department_level:
+            print("don't have assigned dep")
             try:
                 reporter = GovernmentWorker.objects.get(
                     user=issue_doc["reporter"]["id"]
@@ -143,8 +147,10 @@ def get_assignee(grm_db, eadl_db, issue_doc, errors=None):
                 administrative_id = reporter.administrative_id
             except Exception:
                 pass
-
+        level = issue_doc["category"]["administrative_level"]
+        print("protocol redirected")
         if not administrative_id:
+            print("don't have adm_id")
             try:
                 doc_administrative_level = eadl_db.get_query_result(
                     {
@@ -159,13 +165,15 @@ def get_assignee(grm_db, eadl_db, issue_doc, errors=None):
                     error = "Error trying to get administrative_level document in get_assignee function"
                     errors.append(error)
                 raise
-            level = issue_doc["category"]["administrative_level"]
+
             related_region = get_related_region_with_specific_level(
                 eadl_db, doc_administrative_level, level.title()
             )
             administrative_id = related_region["administrative_id"]
+            print(" we're good 2")
 
         if level and administrative_id:
+            print(f"(level, adm_id) : ({level}, {administrative_id})")
             try:
                 adl_user = eadl_db.get_query_result(
                     {
@@ -175,14 +183,17 @@ def get_assignee(grm_db, eadl_db, issue_doc, errors=None):
                         "type": "adl",
                     }
                 )[0][0]
+                print("assignee")
                 assignee = {
                     "id": adl_user["_id"],
                     "name": adl_user["representative"]["name"],
                 }
+                print("assignee ok")
             except Exception:
                 pass
 
         if not assignee:
+            print(" no assignee")
             related_workers = set(
                 GovernmentWorker.objects.filter(
                     department=department_id, administrative_id=administrative_id
@@ -228,11 +239,13 @@ def get_assignee(grm_db, eadl_db, issue_doc, errors=None):
                     ).first()
                     assignee = {"id": worker.user.id, "name": worker.name}
     else:
+        print("not supposed to be here")
         try:
+            print("getting doc_department")
             doc_department = grm_db.get_query_result(
                 {"id": department_id, "type": "issue_department"}
             )[0][0]
-
+            print("got doc_department")
         except Exception:
             if errors:
                 error = "Error trying to get issue_department document in get_assignee function"
@@ -240,6 +253,7 @@ def get_assignee(grm_db, eadl_db, issue_doc, errors=None):
             raise
         assignee = doc_department["head"]
     if not assignee:
+        print(" definitively not supposed to be here")
         try:
             adl_user = eadl_db.get_query_result(
                 {

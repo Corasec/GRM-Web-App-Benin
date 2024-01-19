@@ -365,10 +365,10 @@ class NewIssueMixin(LoginRequiredMixin, IssueFormMixin):
                 doc_component = self.grm_db.get_query_result(
                     {"id": int(data["component"]), "type": "issue_component"}
                 )[0][0]
-            if "sub_component" in data:
-                doc_sub_component = self.grm_db.get_query_result(
-                    {"id": int(data["sub_component"]), "type": "issue_sub_component"}
-                )[0][0]
+            # if "sub_component" in data:
+            #     doc_sub_component = self.grm_db.get_query_result(
+            #         {"id": int(data["sub_component"]), "type": "issue_sub_component"}
+            #     )[0][0]
             if "subproject_group" in data:
                 doc_subproject_group = self.grm_db.get_query_result(
                     {
@@ -409,11 +409,11 @@ class NewIssueMixin(LoginRequiredMixin, IssueFormMixin):
                 "name": doc_component["name"],
             }
 
-        if doc_sub_component:
-            self.doc["sub_component"] = {
-                "id": doc_sub_component["id"],
-                "name": doc_sub_component["name"],
-            }
+        # if doc_sub_component:
+        #     self.doc["sub_component"] = {
+        #         "id": doc_sub_component["id"],
+        #         "name": doc_sub_component["name"],
+        #     }
 
         if doc_subproject_group:
             self.doc["subproject_group"] = {
@@ -534,12 +534,11 @@ class NewIssueMixin(LoginRequiredMixin, IssueFormMixin):
             "name": doc_administrative_level["name"],
         }
 
-    def set_assignee(self):
+    def set_assignee(self, adm_lvl_id=None):
         try:
-            assignee = get_assignee(self.grm_db, self.eadl_db, self.doc)
+            assignee = get_assignee(self.grm_db, self.eadl_db, self.doc, adm_lvl_id)
         except Exception:
-            print("failed here....")
-            raise Http404
+            raise Http404("failed setting assignee....")
 
         if assignee == "":
             msg = _(
@@ -638,7 +637,7 @@ class NewIssueLocationFormView(PageMixin, NewIssueMixin):
     def form_valid(self, form):
         data = form.cleaned_data
         self.set_location_fields(data)
-        self.set_assignee()
+        self.set_assignee(adm_lvl_id=data["administrative_region_value"])
         self.doc.save()
         if not self.doc["assignee"]:
             return HttpResponseRedirect(
