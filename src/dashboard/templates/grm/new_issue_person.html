@@ -59,7 +59,7 @@
             placeholder: "{% translate 'Click to select gender' %}",
             allowClear: true
         });
-        {% translate 'Click to select religion, nationality' as empty_group_msg %}
+        {% comment %} {% translate 'Click to select religion, nationality' as empty_group_msg %}
         $("#id_citizen_group_1").select2({
             placeholder: "{{ empty_group_msg }}",
             allowClear: true
@@ -67,7 +67,7 @@
         $("#id_citizen_group_2").select2({
             placeholder: "{{ empty_group_msg }}",
             allowClear: true
-        });
+        }); 
         {% translate 'Click to select occupation status' as empty_group_msg_occupation %}
         $("#id_citizen_occupation").select2({
             placeholder: "{{ empty_group_msg_occupation }}",
@@ -76,6 +76,16 @@
         {% translate 'Click to select educational level' as empty_group_msg_educational_level %}
         $("#id_citizen_educational_level").select2({
             placeholder: "{{ empty_group_msg_educational_level }}",
+            allowClear: true
+        }); {% endcomment %}
+        {% translate 'Click to select socio-professional group' as empty_group_msg %}
+        $("#id_citizen_group").select2({
+            placeholder: "{{ empty_group_msg }}",
+            allowClear: true
+        });
+        {% translate 'Click to select religious affiliation' as empty_religious_affiliation_msg %}
+        $("#id_religious_affiliation").select2({
+            placeholder: "{{ empty_religious_affiliation_msg }}",
             allowClear: true
         });
     </script>

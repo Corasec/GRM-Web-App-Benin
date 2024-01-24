@@ -102,23 +102,23 @@
                                         </div>
                                     </div>
                                 {% endif %}
-                                {% if doc.citizen_group_1 %}
+                                {% if doc.citizen_group %}
                                     <div class="row mr-2 mb-2">
                                         <div class="col-3 label-align">
-                                            {{ form.citizen_group_1.label_tag }}
+                                            {{ form.citizen_group.label_tag }}
                                         </div>
                                         <div class="col-9 text-regular-family">
-                                            {{ doc.citizen_group_1.name }}
+                                            {{ doc.citizen_group.name }}
                                         </div>
                                     </div>
                                 {% endif %}
-                                {% if doc.citizen_group_2 %}
+                                {% if doc.religious_affiliation %}
                                     <div class="row mr-2 mb-2">
                                         <div class="col-3 label-align">
-                                            {{ form.citizen_group_2.label_tag }}
+                                            {{ form.religious_affiliation.label_tag }}
                                         </div>
                                         <div class="col-9 text-regular-family">
-                                            {{ doc.citizen_group_2.name }}
+                                            {{ doc.religious_affiliation.name }}
                                         </div>
                                     </div>
                                 {% endif %}
@@ -140,7 +140,7 @@
                                 </div>
                                 <div class="row mr-2 mb-2">
                                     <label class="col-3 label-align">
-                                        {% translate "Report" %}:
+                                        {% translate "Type of grievance" %}:
                                     </label>
                                     <div class="col-9 text-regular-family">
                                         {{ doc.issue_type.name }}
@@ -148,7 +148,7 @@
                                 </div>
                                 <div class="row mr-2 mb-2">
                                     <label class="col-3 label-align">
-                                        {% translate "Type of grievance" %}:
+                                        {{ form.issue_sub_type.label_tag }}
                                     </label>
                                     <div class="col-9 text-regular-family">
                                         {{ doc.issue_sub_type.name }}
@@ -156,7 +156,7 @@
                                 </div>
                                 <div class="row mr-2 mb-2">
                                     <label class="col-3 label-align">
-                                        {% translate "Type of grievance" %}:
+                                        {{ form.category.label_tag }}
                                     </label>
                                     <div class="col-9 text-regular-family">
                                         {{ doc.category.name }}
@@ -170,14 +170,14 @@
                                         {{ doc.component.name }}
                                     </div>
                                 </div>
-                                {% comment %} <div class="row mr-2 mb-2">
+                                <div class="row mr-2 mb-2">
                                     <label class="col-3 label-align">
-                                        {% translate "Sub Component" %}:
+                                        {{ form.subproject_group.label_tag }}
                                     </label>
                                     <div class="col-9 text-regular-family">
-                                        {{ doc.sub_component.name }}
+                                        {{ doc.subproject_group.name }}
                                     </div>
-                                </div> {% endcomment %}
+                                </div>
                                 <div class="row mr-2">
                                     <label class="col-3 label-align">
                                         {% translate "Description" %}:

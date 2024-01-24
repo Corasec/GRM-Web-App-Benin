@@ -99,7 +99,7 @@ class NewIssuePersonForm(forms.Form):
         choices=GENDER_CHOICES,
     )
     citizen_group = forms.ChoiceField(
-        label=_("Socioprofessionnel group"),
+        label=_("Socio-professional group"),
         required=False,
         help_text=_("This is an optional field"),
     )
@@ -202,7 +202,7 @@ class NewIssueDetailsForm(forms.Form):
     #     help_text=_("This is an optional field"),
     # )
     subproject_group = forms.ChoiceField(
-        label=_("Subproject/investment type"),
+        label=_("Subproject/ investment type"),
         required=False,
         help_text=_("This is an optional field"),
     )

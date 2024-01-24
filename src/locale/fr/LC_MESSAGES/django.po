@@ -1008,7 +1008,7 @@ msgstr "Rapport"
 #: .\dashboard\templates\grm\new_issue_confirmation.html:153
 #: .\dashboard\templates\grm\new_issue_confirmation.html:161
 msgid "Type of grievance"
-msgstr "Catégorie de grief"
+msgstr "Type de grief"
 
 #: .\dashboard\templates\grm\new_issue_confirmation.html:185
 msgid "Description"

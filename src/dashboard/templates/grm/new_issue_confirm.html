@@ -60,8 +60,8 @@
                                 </div>
                                 {% bootstrap_field form.citizen_age_group layout='horizontal' %}
                                 {% bootstrap_field form.gender layout='horizontal' %}
-                                {% bootstrap_field form.citizen_group_1 layout='horizontal' %}
-                                {% bootstrap_field form.citizen_group_2 layout='horizontal' %}
+                                {% bootstrap_field form.citizen_group layout='horizontal' %}
+                                {% bootstrap_field form.religious_affiliation layout='horizontal' %}
                                 <div class="row">
                                     <div class="col-md-3">
                                         <label for="id_intake_date" class="label-align">
@@ -86,7 +86,7 @@
                                 {% bootstrap_field form.issue_sub_type layout='horizontal' %}
                                 {% bootstrap_field form.category layout='horizontal' %}
                                 {% bootstrap_field form.component layout='horizontal' %}
-                                {% comment %} {% bootstrap_field form.sub_component layout='horizontal' %} {% endcomment %}
+                                {% bootstrap_field form.subproject_group layout='horizontal' %}
                                 <div class="row">
                                     <div class="col-md-3">
                                         <label for="id_description" class="label-align">
@@ -153,13 +153,23 @@
             placeholder: "{% translate 'Click to select gender' %}",
             allowClear: true
         });
-        {% translate 'Click to select religion, nationality' as empty_group_msg %}
+        {% comment %} {% translate 'Click to select religion, nationality' as empty_group_msg %}
         $("#id_citizen_group_1").select2({
             placeholder: "{{ empty_group_msg }}",
             allowClear: true
         });
         $("#id_citizen_group_2").select2({
             placeholder: "{{ empty_group_msg }}",
+            allowClear: true
+        }); {% endcomment %}
+        {% translate 'Click to select socio-professional group' as empty_group_msg %}
+        $("#id_citizen_group").select2({
+            placeholder: "{{ empty_group_msg }}",
+            allowClear: true
+        });
+        {% translate 'Click to select religious affiliation' as empty_religious_affiliation_msg %}
+        $("#id_religious_affiliation").select2({
+            placeholder: "{{ empty_religious_affiliation_msg }}",
             allowClear: true
         });
         $("#id_issue_type").select2({
@@ -182,6 +192,10 @@
             placeholder: "{% translate 'Click to select an item' %}",
             allowClear: true
         }); {% endcomment %}
+        $("#id_subproject_group").select2({
+            placeholder: "{% translate 'Click to select an item' %}",
+            allowClear: true
+        });
         $("#id_administrative_region").select2({
             placeholder: "{% translate 'Click to select location' %}",
             allowClear: true

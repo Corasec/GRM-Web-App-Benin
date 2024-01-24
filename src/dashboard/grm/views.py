@@ -678,7 +678,7 @@ class NewIssueConfirmFormView(PageMixin, NewIssueMixin):
             self.set_person_fields(data)
             self.set_details_fields(data)
             self.set_location_fields(data)
-            self.set_assignee()
+            self.set_assignee(adm_lvl_id=data["administrative_region_value"])
         except Exception as e:
             raise e
 
@@ -773,20 +773,25 @@ class IssueListView(AJAXRequestMixin, LoginRequiredMixin, generic.ListView):
             parent_id = user.governmentworker.administrative_id
             descendants = get_administrative_level_descendants(eadl_db, parent_id, [])
             allowed_regions = descendants + [parent_id]
+            # selector["$or"] = [
+            #     {"assignee.id": user.id},
+            #     {
+            #         "$and": [
+            #             {
+            #                 "category.assigned_department": user.governmentworker.department
+            #             },
+            #             {
+            #                 "administrative_region.administrative_id": {
+            #                     "$in": allowed_regions
+            #                 }
+            #             },
+            #         ]
+            #     },
+            # ]
             selector["$or"] = [
                 {"assignee.id": user.id},
-                {
-                    "$and": [
-                        {
-                            "category.assigned_department": user.governmentworker.department
-                        },
-                        {
-                            "administrative_region.administrative_id": {
-                                "$in": allowed_regions
-                            }
-                        },
-                    ]
-                },
+                {"category.assigned_department": user.governmentworker.department},
+                {"administrative_region.administrative_id": {"$in": allowed_regions}},
             ]
 
         date_range = {}
