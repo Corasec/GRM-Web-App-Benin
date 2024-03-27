@@ -854,7 +854,7 @@ msgstr "Confidentiel"
 
 #: .\dashboard\templates\grm\issue_detail.html:87
 msgid "Show sensitive data"
-msgstr ""
+msgstr "Afficher donnée sensible"
 
 #: .\dashboard\templates\grm\issue_detail.html:97
 #: .\dashboard\templates\grm\new_issue_confirmation.html:90
@@ -869,7 +869,7 @@ msgstr "Enregistrer la résolution"
 
 #: .\dashboard\templates\grm\issue_detail.html:159
 msgid "Rejection reason"
-msgstr ""
+msgstr "Raison du rejet"
 
 #: .\dashboard\templates\grm\issue_detail.html:177
 msgid "Steps Taken"

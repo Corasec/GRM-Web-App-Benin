@@ -131,3 +131,4 @@ dmypy.json
 
 # SO
 .DS_Store
+*.xlsx
