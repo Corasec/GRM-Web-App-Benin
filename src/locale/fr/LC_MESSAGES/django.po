@@ -738,7 +738,7 @@ msgstr "Pourcentage"
 #: .\dashboard\templates\grm\issue_list.html:12
 #: .\dashboard\templates\grm\review_issues.html:220
 msgid "Type"
-msgstr "Catégorie"
+msgstr "Type"
 
 #: .\dashboard\templates\diagnostics\home.html:21
 #: .\dashboard\templates\diagnostics\home.html:188
@@ -746,7 +746,7 @@ msgstr "Catégorie"
 #: .\dashboard\templates\grm\issue_list.html:11
 #: .\dashboard\templates\grm\review_issues.html:216
 msgid "Category"
-msgstr "Sujet"
+msgstr "Catégorie"
 
 #: .\dashboard\templates\diagnostics\home.html:29
 #: .\dashboard\templates\grm\review_issues.html:24

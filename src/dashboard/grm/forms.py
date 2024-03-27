@@ -21,7 +21,6 @@ from grm.utils import (
     get_issue_citizen_group_choices,
     get_issue_citizen_group_1_choices,
     get_issue_citizen_group_2_choices,
-    get_issue_religious_affiliation,
     get_issue_subproject_group_choices,
     get_issue_status_choices,
     get_issue_type_choices,
@@ -113,11 +112,11 @@ class NewIssuePersonForm(forms.Form):
     #     required=False,
     #     help_text=_("This is an optional field"),
     # )
-    religious_affiliation = forms.ChoiceField(
-        label=_("Religious affiliation"),
-        required=False,
-        help_text=_("This is an optional field"),
-    )
+    # religious_affiliation = forms.ChoiceField(
+    #     label=_("Religious affiliation"),
+    #     required=False,
+    #     help_text=_("This is an optional field"),
+    # )
 
     def __init__(self, *args, **kwargs):
         initial = kwargs.get("initial")
@@ -142,11 +141,11 @@ class NewIssuePersonForm(forms.Form):
         # self.fields["citizen_group_2"].widget.choices = citizen_group_2_choices
         # self.fields["citizen_group_2"].choices = citizen_group_2_choices
 
-        religious_affiliation_choices = get_issue_religious_affiliation(grm_db)
-        self.fields[
-            "religious_affiliation"
-        ].widget.choices = religious_affiliation_choices
-        self.fields["religious_affiliation"].choices = religious_affiliation_choices
+        # religious_affiliation_choices = get_issue_religious_affiliation(grm_db)
+        # self.fields[
+        #     "religious_affiliation"
+        # ].widget.choices = religious_affiliation_choices
+        # self.fields["religious_affiliation"].choices = religious_affiliation_choices
 
         document = grm_db[doc_id]
 
@@ -167,10 +166,10 @@ class NewIssuePersonForm(forms.Form):
         if "citizen_group" in document and document["citizen_group"]:
             self.fields["citizen_group"].initial = document["citizen_group"]["id"]
 
-        if "religious_affiliation" in document and document["religious_affiliation"]:
-            self.fields["religious_affiliation"].initial = document[
-                "religious_affiliation"
-            ]["id"]
+        # if "religious_affiliation" in document and document["religious_affiliation"]:
+        #     self.fields["religious_affiliation"].initial = document[
+        #         "religious_affiliation"
+        #     ]["id"]
 
         # if "citizen_group_1" in document and document["citizen_group_1"]:
         #     self.fields["citizen_group_1"].initial = document["citizen_group_1"]["id"]

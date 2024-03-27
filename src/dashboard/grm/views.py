@@ -103,6 +103,11 @@ class IssueMixin:
 
     def check_permissions(self):
         user = self.request.user
+        administrative_id = (
+            self.doc["administrative_region"]["administrative_id"]
+            if "administrative_region" in self.doc
+            else None
+        )
 
         if self.doc["confirmed"]:
             if (
@@ -127,12 +132,27 @@ class IssueMixin:
                             if self.doc["reporter"]["id"] != user.id:
                                 self.has_permission = False
                         else:
-                            if not user.governmentworker.has_read_permission_for_issue(
+                            # show user's children administrative level issue
+                            if user.governmentworker.has_read_permission_for_issue(
                                 self.eadl_db, self.doc
+                            ):
+                                self.has_permission = True
+                            elif (
+                                not user.governmentworker.has_read_permission_for_issue(
+                                    self.eadl_db, self.doc
+                                )
                             ):
                                 self.has_permission = False
                             if "write" not in self.permissions:
                                 self.has_permission = False
+        if hasattr(user, "governmentworker"):
+            user_adm_id = user.governmentworker.administrative_id
+            eadl_db = get_db()
+            descendants = get_administrative_level_descendants(eadl_db, user_adm_id, [])
+            allowed_regions = descendants + [user_adm_id]
+            if administrative_id in allowed_regions:
+                self.has_permission = True
+        print(f"**************has permission: {self.has_permission} ***************")
 
     def dispatch(self, request, *args, **kwargs):
         self.grm_db = get_db(COUCHDB_GRM_DATABASE)
@@ -144,6 +164,7 @@ class IssueMixin:
             raise Http404
 
         self.check_permissions()
+        print("****************dispatch****************************")
         if not self.has_permission:
             raise PermissionDenied
 
@@ -821,6 +842,7 @@ class IssueListView(AJAXRequestMixin, LoginRequiredMixin, generic.ListView):
             selector["issue_type.id"] = int(issue_type)
         if status:
             selector["status.id"] = int(status)
+        print(f"user is authenticated: {self.request.user.is_authenticated}")
         return grm_db.get_query_result(selector)[index : index + offset]
 
 

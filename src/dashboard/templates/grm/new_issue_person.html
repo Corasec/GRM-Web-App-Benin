@@ -83,11 +83,11 @@
             placeholder: "{{ empty_group_msg }}",
             allowClear: true
         });
-        {% translate 'Click to select religious affiliation' as empty_religious_affiliation_msg %}
+        {% comment %} {% translate 'Click to select religious affiliation' as empty_religious_affiliation_msg %}
         $("#id_religious_affiliation").select2({
             placeholder: "{{ empty_religious_affiliation_msg }}",
             allowClear: true
-        });
+        }); {% endcomment %}
     </script>
 {% endblock select2 %}
 
