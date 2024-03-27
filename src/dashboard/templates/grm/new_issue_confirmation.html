@@ -112,7 +112,7 @@
                                         </div>
                                     </div>
                                 {% endif %}
-                                {% if doc.religious_affiliation %}
+                                {% comment %} {% if doc.religious_affiliation %}
                                     <div class="row mr-2 mb-2">
                                         <div class="col-3 label-align">
                                             {{ form.religious_affiliation.label_tag }}
@@ -121,7 +121,7 @@
                                             {{ doc.religious_affiliation.name }}
                                         </div>
                                     </div>
-                                {% endif %}
+                                {% endif %} {% endcomment %}
                                 <div class="row mr-2 mb-2">
                                     <div class="col-3 label-align">
                                         {{ form.intake_date.label_tag }}

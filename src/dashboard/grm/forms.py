@@ -182,12 +182,12 @@ class NewIssueDetailsForm(forms.Form):
     intake_date = forms.DateTimeField(
         label=_("Date of intake"),
         input_formats=["%d/%m/%Y"],
-        help_text="Date when the issue was recorded on the GRM",
+        help_text=_("Date when the issue was recorded on the GRM"),
     )
     issue_date = forms.DateTimeField(
         label=_("Date of issue"),
         input_formats=["%d/%m/%Y"],
-        help_text="Date when the issue occurred",
+        help_text=_("Date when the issue occurred"),
     )
     issue_type = forms.ChoiceField(label=_("What are you reporting"))
     issue_sub_type = forms.ChoiceField(label=_("The sub type of grievance"))

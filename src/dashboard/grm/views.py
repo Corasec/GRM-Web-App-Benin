@@ -471,22 +471,22 @@ class NewIssueMixin(LoginRequiredMixin, IssueFormMixin):
 
         self.doc["gender"] = data["gender"]
 
-        if data["religious_affiliation"]:
-            try:
-                doc_issue_religious_affiliation = self.grm_db.get_query_result(
-                    {
-                        "id": int(data["religious_affiliation"]),
-                        "type": "issue_religious_affiliation",
-                    }
-                )[0][0]
-                self.doc["religious_affiliation"] = {
-                    "name": doc_issue_religious_affiliation["name"],
-                    "id": doc_issue_religious_affiliation["id"],
-                }
-            except Exception:
-                raise Http404
-        else:
-            self.doc["religious_affiliation"] = ""
+        # if data["religious_affiliation"]:
+        #     try:
+        #         doc_issue_religious_affiliation = self.grm_db.get_query_result(
+        #             {
+        #                 "id": int(data["religious_affiliation"]),
+        #                 "type": "issue_religious_affiliation",
+        #             }
+        #         )[0][0]
+        #         self.doc["religious_affiliation"] = {
+        #             "name": doc_issue_religious_affiliation["name"],
+        #             "id": doc_issue_religious_affiliation["id"],
+        #         }
+        #     except Exception:
+        #         raise Http404
+        # else:
+        #     self.doc["religious_affiliation"] = ""
 
         if data["citizen_group"]:
             try:
