@@ -441,3 +441,53 @@ class IssueListAPIViewTest(APITestCase):
 
         assert issue_result['assignee']['id'] == self.issue1.assignee.id
         assert issue_result['assignee']['name'] == self.user.name
+
+    def test_filter_by_assignee(self):
+        """Test filtering issues by assignee ID."""
+        self.authenticate_with_token()
+
+        # Create a different user and assign an issue to it
+        another_user = UserFactory()
+        issue3 = IssueFactory(
+            status=self.status_open,
+            category=self.category_env,
+            issue_type=self.issue_type_complaint,
+            administrative_region=self.admin_region,
+            reporter=self.user,
+            assignee=another_user,
+            citizen=self.citizen,
+            description="Assigned to another user",
+        )
+
+        response = self.client.get(self.url, {"assignee": another_user.id})
+        response_data = response.data
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response_data["count"] == 1
+        assert response_data["results"][0]["id"] == issue3.id
+        assert response_data["results"][0]["assignee"]["id"] == another_user.id
+
+    def test_filter_by_reporter(self):
+        """Test filtering issues by reporter ID."""
+        self.authenticate_with_token()
+
+        # Create a different user and assign it as an issue reporter
+        another_user = UserFactory()
+        issue4 = IssueFactory(
+            status=self.status_open,
+            category=self.category_env,
+            issue_type=self.issue_type_complaint,
+            administrative_region=self.admin_region,
+            reporter=another_user,
+            assignee=self.user,
+            citizen=self.citizen,
+            description="Reported by another user",
+        )
+
+        response = self.client.get(self.url, {"reporter": another_user.id})
+        response_data = response.data
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response_data["count"] == 1
+        assert response_data["results"][0]["id"] == issue4.id
+        assert response_data["results"][0]["reporter"]["id"] == another_user.id

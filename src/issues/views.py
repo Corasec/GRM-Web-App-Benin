@@ -398,7 +398,12 @@ class IssueListAPIView(ListAPIView):
 
     @swagger_auto_schema(
         operation_summary="List all issues (paginated)",
-        operation_description="Retrieve a paginated list of all issues ordered by intake date.",
+        operation_description=(
+            "Retrieve a paginated list of all issues ordered by intake date.\n\n"
+            "You can also filter the results by:\n"
+            "- **assignee**: ID of the user assigned to the issue\n"
+            "- **reporter**: ID of the user who reported the issue"
+        ),
         tags=['Issues'],
         security=[{'Token': []}],
         manual_parameters=[
@@ -411,6 +416,20 @@ class IssueListAPIView(ListAPIView):
                 description="Number of results per page (max: 100)",
                 type=openapi.TYPE_INTEGER,
                 default=20,
+            ),
+            openapi.Parameter(
+                "assignee",
+                openapi.IN_QUERY,
+                description="Filter issues by assignee user ID",
+                type=openapi.TYPE_INTEGER,
+                required=False,
+            ),
+            openapi.Parameter(
+                "reporter",
+                openapi.IN_QUERY,
+                description="Filter issues by reporter user ID",
+                type=openapi.TYPE_INTEGER,
+                required=False,
             ),
         ],
         responses={
@@ -555,6 +574,10 @@ class IssueListAPIView(ListAPIView):
         Returns a paginated list of all issues available in the system.
         The list is ordered by intake date in descending order (most recent first).
 
+        Optional query parameters:
+        - `assignee`: filter issues assigned to a specific user (by ID).
+        - `reporter`: filter issues reported by a specific user (by ID).
+
         Args:
             request: HTTP request object
 
@@ -562,6 +585,18 @@ class IssueListAPIView(ListAPIView):
             Response: JSON response with paginated list of issues
         """
         return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        assignee_id = self.request.query_params.get("assignee")
+        reporter_id = self.request.query_params.get("reporter")
+
+        if assignee_id:
+            qs = qs.filter(assignee_id=assignee_id)
+        if reporter_id:
+            qs = qs.filter(reporter_id=reporter_id)
+
+        return qs
 
 
 class IssueRetrieveAPIView(RetrieveAPIView):
