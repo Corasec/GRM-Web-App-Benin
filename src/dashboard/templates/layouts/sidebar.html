@@ -33,10 +33,17 @@
 				</li>
 				{% if user.grm_manager %}
 					<li class="nav-item">
-						<a href="{% url 'dashboard:performance_diagnostics:dashboard' %}"
-						   class="nav-link {% if active_level1 == 'performance_diagnostics' %}active{% endif %}">
-							<i class="nav-icon fa fa-dashboard"></i>
-							<p>{% translate "Dashboard" %}</p>
+						<a href="{% url 'dashboard:learning_materials:home' %}"
+						   class="nav-link {% if active_level1 == 'learning_materials' %}active{% endif %}">
+							<i class="nav-icon fa fa-graduation-cap"></i>
+							<p>{% translate "Learning Materials" %}</p>
+						</a>
+					</li>
+					<li class="nav-item">
+						<a href="{% url 'dashboard:settings:main' %}"
+						   class="nav-link {% if active_level1 == 'settings' %}active{% endif %}">
+							<i class="nav-icon fa fa-cogs"></i>
+							<p>{% translate "Settings" %}</p>
 						</a>
 					</li>
 				{% endif %}

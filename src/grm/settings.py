@@ -18,12 +18,14 @@ from pathlib import Path
 import django.conf.locale
 import environ
 from django.conf import global_settings
+
 # https://django-environ.readthedocs.io/en/latest/
 env = environ.Env()
-env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env.read_env(str(BASE_DIR / 'grm' / '.env'))
 
 # Serverless builds must not use a developer machine DATABASE_URL pointing at localhost.
 # Without a real remote URL, django-environ falls back to SQLite (see DATABASES below).
@@ -61,6 +63,7 @@ INSTALLED_APPS = [
 CREATED_APPS = [
     "authentication",
     "dashboard",
+    "dashboard.learning_materials",
     "etl",
     "issues",
     "wizard",
@@ -320,9 +323,7 @@ HUGGINGFACE_API_TIMEOUT = env('HUGGINGFACE_API_TIMEOUT', default=30)
 HUGGINGFACE_MAX_RETRIES = env('HUGGINGFACE_MAX_RETRIES', default=3)
 
 # Logging configuration for Hugging Face connector
-_huggingface_log_path = (
-    "/tmp/huggingface.log" if os.environ.get("VERCEL") else str(BASE_DIR / "huggingface.log")
-)
+_huggingface_log_path = "/tmp/huggingface.log" if os.environ.get("VERCEL") else str(BASE_DIR / "huggingface.log")
 
 LOGGING = {
     'version': 1,

@@ -1,0 +1,1115 @@
+{% extends 'layouts/base.html' %}{% load static i18n %}
+
+{% block extracss %}
+<style>
+    :root {
+        --green: #22C55E;
+        --green-light: #F0FDF4;
+        --green-border: #86EFAC;
+        --gray-50: #F8FAFC;
+        --gray-100: #F1F5F9;
+        --gray-200: #E2E8F0;
+        --gray-300: #CBD5E1;
+        --gray-400: #94A3B8;
+        --gray-500: #64748B;
+        --gray-600: #475569;
+        --gray-700: #334155;
+        --gray-800: #1E293B;
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+        --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+    }
+
+    .lm-page {
+        min-height: calc(100vh - 120px);
+        padding: 24px 0;
+    }
+
+    .lm-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 32px;
+    }
+
+    .lm-header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .lm-back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--gray-200);
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gray-600);
+        transition: all 0.2s;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .lm-back-btn:hover {
+        border-color: var(--gray-300);
+        background: var(--gray-50);
+        color: var(--gray-800);
+    }
+
+    .lm-title-area h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .lm-title-area p {
+        font-size: 14px;
+        color: var(--gray-500);
+        margin: 2px 0 0 0;
+    }
+
+    .lm-header-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .lm-header-actions .btn {
+        border-radius: var(--radius-md);
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-lm-preview {
+        border: 1px solid var(--gray-200);
+        background: white;
+        color: var(--gray-700);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .btn-lm-preview:hover {
+        border-color: var(--gray-300);
+        background: var(--gray-50);
+    }
+
+    .btn-lm-update {
+        background: var(--green);
+        border: none;
+        color: white;
+        box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-lm-update:hover {
+        background: #16A34A;
+        box-shadow: 0 6px 14px rgba(34, 197, 94, 0.35);
+    }
+
+    .lm-card {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .lm-card-header {
+        padding: 20px 24px 0 24px;
+    }
+
+    .lm-card-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0 0 16px 0;
+    }
+
+    .lm-card-body {
+        padding: 24px;
+    }
+
+    .lm-lang-pills {
+        display: flex;
+        gap: 0;
+        background: var(--gray-100);
+        border-radius: var(--radius-md);
+        padding: 3px;
+        margin-bottom: 24px;
+        width: fit-content;
+    }
+
+    .lm-lang-pill {
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--gray-500);
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .lm-lang-pill.active {
+        background: white;
+        color: var(--green);
+        font-weight: 600;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .lm-lang-pill:hover:not(.active) {
+        color: var(--gray-700);
+    }
+
+    .lm-field {
+        margin-bottom: 20px;
+    }
+
+    .lm-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 6px;
+    }
+
+    .lm-field input,
+    .lm-field textarea,
+    .lm-field select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        color: var(--gray-800);
+        background: white;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        outline: none;
+        font-family: inherit;
+    }
+
+    .lm-field input:focus,
+    .lm-field textarea:focus,
+    .lm-field select:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+    }
+
+    .lm-field textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .lm-field textarea.lm-body {
+        min-height: 240px;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .lm-dropzone {
+        border: 2px dashed var(--gray-300);
+        border-radius: var(--radius-lg);
+        padding: 40px 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--gray-50);
+    }
+
+    .lm-dropzone:hover {
+        border-color: var(--green);
+        background: var(--green-light);
+    }
+
+    .lm-dropzone.has-file {
+        border-style: solid;
+        border-color: var(--green);
+        background: var(--green-light);
+    }
+
+    .lm-dropzone-icon {
+        font-size: 40px;
+        color: var(--gray-400);
+        margin-bottom: 12px;
+    }
+
+    .lm-dropzone:hover .lm-dropzone-icon {
+        color: var(--green);
+    }
+
+    .lm-dropzone-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 4px;
+    }
+
+    .lm-dropzone-sub {
+        font-size: 13px;
+        color: var(--gray-500);
+    }
+
+    .lm-dropzone-file {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--gray-700);
+    }
+
+    .lm-dropzone-file i {
+        color: var(--green);
+        font-size: 20px;
+    }
+
+    .lm-dropzone-file .remove-file {
+        color: #EF4444;
+        cursor: pointer;
+        font-size: 18px;
+        margin-left: 8px;
+    }
+
+    .lm-segmented {
+        display: flex;
+        gap: 0;
+        background: var(--gray-100);
+        border-radius: var(--radius-md);
+        padding: 3px;
+        width: 100%;
+    }
+
+    .lm-segmented .seg-option {
+        flex: 1;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gray-500);
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .lm-segmented .seg-option.active {
+        background: white;
+        color: var(--green);
+        font-weight: 600;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .lm-segmented .seg-option:hover:not(.active) {
+        color: var(--gray-700);
+    }
+
+    .lm-role-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .lm-role-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+        user-select: none;
+    }
+
+    .lm-role-card:hover {
+        border-color: var(--gray-300);
+    }
+
+    .lm-role-card.selected {
+        border-color: var(--green-border);
+        background: var(--green-light);
+    }
+
+    .lm-role-card .check-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2px solid var(--gray-300);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: white;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+    .lm-role-card.selected .check-icon {
+        background: var(--green);
+        border-color: var(--green);
+    }
+
+    .lm-role-card .role-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--gray-700);
+    }
+
+    .lm-role-card.selected .role-label {
+        color: var(--gray-800);
+    }
+
+    .lm-publish-btn {
+        width: 100%;
+        padding: 12px;
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        font-weight: 600;
+        border: none;
+        background: var(--green);
+        color: white;
+        box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+        transition: all 0.2s;
+        margin-bottom: 8px;
+    }
+
+    .lm-publish-btn:hover {
+        background: #16A34A;
+        box-shadow: 0 6px 14px rgba(34, 197, 94, 0.35);
+    }
+
+    .lm-ghost-btn {
+        width: 100%;
+        padding: 10px;
+        border-radius: var(--radius-md);
+        font-size: 13px;
+        font-weight: 500;
+        border: 1px solid var(--gray-200);
+        background: white;
+        color: var(--gray-600);
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .lm-ghost-btn:hover {
+        border-color: var(--gray-300);
+        background: var(--gray-50);
+    }
+
+    .lm-select-wrap {
+        margin-bottom: 16px;
+    }
+
+    .lm-select-wrap label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 6px;
+    }
+
+    .lm-content-tabs {
+        display: none;
+    }
+
+    .lm-content-tabs.active {
+        display: block;
+    }
+
+    .lm-toolbar {
+        display: flex;
+        gap: 4px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--gray-200);
+        margin-bottom: 8px;
+    }
+
+    .lm-toolbar button {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: none;
+        background: transparent;
+        color: var(--gray-500);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+    }
+
+    .lm-toolbar button:hover {
+        background: var(--gray-100);
+        color: var(--gray-700);
+    }
+
+    .lm-type-segmented {
+        display: flex;
+        gap: 0;
+        background: var(--gray-100);
+        border-radius: var(--radius-md);
+        padding: 3px;
+        width: 100%;
+    }
+
+    .lm-type-segmented .type-option {
+        flex: 1;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--gray-500);
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .lm-type-segmented .type-option.active {
+        background: white;
+        color: var(--green);
+        font-weight: 600;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .lm-type-segmented .type-option:hover:not(.active) {
+        color: var(--gray-700);
+    }
+
+    .lm-body-wrapper {
+        position: relative;
+    }
+
+    .lm-current-file {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        margin-bottom: 8px;
+    }
+
+    .lm-current-file a {
+        color: var(--green);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .lm-current-file a:hover {
+        text-decoration: underline;
+    }
+
+    #learning-material-form input[type="file"] {
+        display: none;
+    }
+
+    .lm-preview-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+    .lm-preview-overlay.show {
+        display: flex;
+    }
+    .lm-preview-modal {
+        background: white;
+        border-radius: var(--radius-lg);
+        max-width: 720px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    .lm-preview-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .lm-preview-header h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin: 0;
+    }
+    .lm-preview-close {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: var(--gray-100);
+        border-radius: 8px;
+        color: var(--gray-500);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    .lm-preview-close:hover {
+        background: var(--gray-200);
+        color: var(--gray-700);
+    }
+    .lm-preview-body {
+        padding: 24px;
+    }
+    .preview-card {
+        display: flex;
+        gap: 14px;
+        background: #fff;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        align-items: flex-start;
+    }
+    .preview-card-thumb {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        font-size: 20px;
+        background: #e6f0fa;
+        color: #3B82F6;
+    }
+    .preview-card-body {
+        flex: 1;
+        min-width: 0;
+    }
+    .preview-card-title {
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.3;
+        color: #1f2937;
+        margin: 0 0 4px;
+    }
+    .preview-card-summary {
+        font-size: 13px;
+        color: #6b7280;
+        line-height: 1.4;
+        margin: 0 0 8px;
+    }
+    .preview-card-summary:empty {
+        display: none;
+    }
+    .preview-card-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: #9ca3af;
+    }
+    .preview-card-meta .type-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        background: #e6f0fa;
+        color: #3B82F6;
+    }
+    .preview-card-meta .read-time {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: #9ca3af;
+    }
+
+    .confirm-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+    .confirm-buttons .btn {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .confirm-buttons .btn-confirm-yes {
+        background: #EF4444;
+        color: white;
+    }
+    .confirm-buttons .btn-confirm-yes:hover {
+        background: #DC2626;
+    }
+    .confirm-buttons .btn-confirm-no {
+        background: var(--gray-100);
+        color: var(--gray-700);
+    }
+    .confirm-buttons .btn-confirm-no:hover {
+        background: var(--gray-200);
+    }
+    .confirm-text {
+        font-size: 15px;
+        color: var(--gray-600);
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .lm-preview-body .message-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+        text-align: center;
+    }
+    .lm-preview-body .message-icon.success {
+        color: #22C55E;
+    }
+    .lm-preview-body .message-icon.error {
+        color: #EF4444;
+    }
+    .lm-preview-body .message-text {
+        font-size: 14px;
+        color: var(--gray-500);
+        text-align: center;
+        margin: 0;
+    }
+
+
+</style>
+{% endblock %}
+
+{% block content-header %}{% endblock %}
+{% block content %}
+<div class="lm-page">
+    <div class="container-fluid">
+        <form method="post" id="learning-material-form" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="lm-header">
+                <div class="lm-header-left">
+                    <a href="{% url 'dashboard:learning_materials:home' %}" class="lm-back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <div class="lm-title-area">
+                        <h1>{% if form.instance.pk %}{% translate 'Material' %}{% else %}{% translate 'New material' %}{% endif %}</h1>
+                        <p>{% translate 'Fill in the information below' %}</p>
+                    </div>
+                </div>
+                <div class="lm-header-actions">
+                    <button type="button" class="btn btn-lm-preview">
+                        <i class="fas fa-eye"></i> {% translate 'Preview' %}
+                    </button>
+                    <button type="button" class="btn btn-lm-update" id="headerSaveBtn">
+                         {% translate 'Save' %}
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-7 col-xl-8">
+                    <div class="lm-card">
+                        <div class="lm-card-header">
+                            <h3>{% translate 'Content' %}</h3>
+                            <div class="lm-lang-pills" id="langPills">
+                                <button type="button" class="lm-lang-pill active" data-lang="fr">
+                                    <i class="fas fa-language mr-1"></i>{% translate 'Français' %}
+                                </button>
+                                <button type="button" class="lm-lang-pill" data-lang="en">
+                                    <i class="fas fa-language mr-1"></i>{% translate 'English' %}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="lm-card-body pt-0">
+                            <div class="lm-content-tabs active" data-lang="fr">
+                                <div class="lm-field">
+                                    <label for="{{ form.title_fr.id_for_label }}">{{ form.title_fr.label }}</label>
+                                    <input type="text" name="title_fr" id="{{ form.title_fr.id_for_label }}"
+                                           value="{{ form.title_fr.value|default:'' }}" placeholder="{% translate 'Enter title in French' %}">
+                                </div>
+                                <div class="lm-field">
+                                    <label for="{{ form.summary_fr.id_for_label }}">{{ form.summary_fr.label }}</label>
+                                    <textarea name="summary_fr" id="{{ form.summary_fr.id_for_label }}"
+                                              placeholder="{% translate 'Enter summary in French' %}" rows="3">{{ form.summary_fr.value|default:'' }}</textarea>
+                                </div>
+                                <div class="lm-field lm-body-wrapper">
+                                    <label for="{{ form.body_fr.id_for_label }}">{{ form.body_fr.label }}</label>
+                                    <div class="lm-toolbar">
+                                        <button type="button" title="Bold"><i class="fas fa-bold"></i></button>
+                                        <button type="button" title="Italic"><i class="fas fa-italic"></i></button>
+                                        <button type="button" title="List"><i class="fas fa-list"></i></button>
+                                        <button type="button" title="Link"><i class="fas fa-link"></i></button>
+                                        <button type="button" title="Image"><i class="fas fa-image"></i></button>
+                                    </div>
+                                    <textarea name="body_fr" id="{{ form.body_fr.id_for_label }}"
+                                              class="lm-body" placeholder="{% translate 'Write content in French...' %}">{{ form.body_fr.value|default:'' }}</textarea>
+                                </div>
+                            </div>
+                            <div class="lm-content-tabs" data-lang="en">
+                                <div class="lm-field">
+                                    <label for="{{ form.title_en.id_for_label }}">{{ form.title_en.label }}</label>
+                                    <input type="text" name="title_en" id="{{ form.title_en.id_for_label }}"
+                                           value="{{ form.title_en.value|default:'' }}" placeholder="{% translate 'Enter title in English' %}">
+                                </div>
+                                <div class="lm-field">
+                                    <label for="{{ form.summary_en.id_for_label }}">{{ form.summary_en.label }}</label>
+                                    <textarea name="summary_en" id="{{ form.summary_en.id_for_label }}"
+                                              placeholder="{% translate 'Enter summary in English' %}" rows="3">{{ form.summary_en.value|default:'' }}</textarea>
+                                </div>
+                                <div class="lm-field lm-body-wrapper">
+                                    <label for="{{ form.body_en.id_for_label }}">{{ form.body_en.label }}</label>
+                                    <div class="lm-toolbar">
+                                        <button type="button" title="Bold"><i class="fas fa-bold"></i></button>
+                                        <button type="button" title="Italic"><i class="fas fa-italic"></i></button>
+                                        <button type="button" title="List"><i class="fas fa-list"></i></button>
+                                        <button type="button" title="Link"><i class="fas fa-link"></i></button>
+                                        <button type="button" title="Image"><i class="fas fa-image"></i></button>
+                                    </div>
+                                    <textarea name="body_en" id="{{ form.body_en.id_for_label }}"
+                                              class="lm-body" placeholder="{% translate 'Write content in English...' %}">{{ form.body_en.value|default:'' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lm-card">
+                        <div class="lm-card-header">
+                            <h3>{% translate 'Attachments' %}</h3>
+                        </div>
+                        <div class="lm-card-body pt-0">
+                            {% if form.instance.pk and form.instance.file %}
+                            <div class="lm-current-file">
+                                <i class="fas fa-file-alt text-primary"></i>
+                                <a href="{{ form.instance.file.url }}" target="_blank">{{ form.instance.filename }}</a>
+                                <span class="text-muted small">({% translate 'current file' %})</span>
+                                <label class="ml-auto mb-0 d-flex align-items-center gap-2" style="cursor:pointer;user-select:none">
+                                    <input type="checkbox" name="clear_file" id="id_clear_file">
+                                    <span class="text-danger small ml-2">{% translate 'Remove' %}</span>
+                                </label>
+                            </div>
+                            {% endif %}
+                            <div class="lm-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                                <div class="lm-dropzone-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="lm-dropzone-title">{% translate 'Drag files here or click to upload' %}</div>
+                                <div class="lm-dropzone-sub">{% translate 'PDF, PNG, JPG' %}</div>
+                            </div>
+                            <input type="file" name="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 col-xl-4">
+                    <div class="lm-card">
+                        <div class="lm-card-header">
+                            <h3>{% translate 'Publish' %}</h3>
+                        </div>
+                        <div class="lm-card-body pt-0">
+                            <div class="lm-field">
+                                <label>{% translate 'Status' %}</label>
+                                <div class="lm-segmented" id="statusSegmented">
+                                    {% for value, label in form.status.field.choices %}
+                                    <button type="button" class="seg-option {% if form.status.value == value %}active{% endif %}"
+                                            data-value="{{ value }}">{{ label }}</button>
+                                    {% endfor %}
+                                </div>
+                                <input type="hidden" name="status" id="id_status" value="{{ form.status.value|default:'draft' }}">
+                            </div>
+                            <button type="button" name="status" value="published" class="lm-publish-btn" id="publishBtn">
+                                <i class="fas fa-check-circle mr-1"></i> {% translate 'Publish' %}
+                            </button>
+                            <button type="button" class="lm-ghost-btn" id="previewAsRoleBtn">
+                                <i class="fas fa-eye mr-1"></i> {% translate 'Preview as role' %}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="lm-card">
+                        <div class="lm-card-header">
+                            <h3>{% translate 'Target Roles' %}</h3>
+                        </div>
+                        <div class="lm-card-body pt-0">
+                            <div class="lm-role-cards" id="roleCards">
+                                {% for value, label in form.target_roles.field.choices %}
+                                <div class="lm-role-card {% if value in form.target_roles.value %}selected{% endif %}"
+                                     data-value="{{ value }}">
+                                    <div class="check-icon">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <span class="role-label">{{ label }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% for value, label in form.target_roles.field.choices %}
+                            <input type="checkbox" name="target_roles" value="{{ value }}"
+                                   id="id_target_roles_{{ forloop.counter0 }}"
+                                   class="d-none"
+                                   {% if value in form.target_roles.value %}checked{% endif %}>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="lm-card">
+                        <div class="lm-card-header">
+                            <h3>{% translate 'Organize' %}</h3>
+                        </div>
+                        <div class="lm-card-body pt-0">
+                            <div class="lm-select-wrap">
+                                <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                                <select name="category" id="{{ form.category.id_for_label }}">
+                                    {% for value, label in form.category.field.choices %}
+                                    <option value="{{ value }}" {% if form.category.value == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="lm-select-wrap">
+                                <label>{% translate 'Type' %}</label>
+                                <div class="lm-type-segmented" id="typeSegmented">
+                                    {% for value, label in form.content_type.field.choices %}
+                                    <button type="button" class="type-option {% if form.content_type.value == value %}active{% endif %}"
+                                            data-value="{{ value }}">{{ label }}</button>
+                                    {% endfor %}
+                                </div>
+                                <input type="hidden" name="content_type" id="id_content_type" value="{{ form.content_type.value|default:'article' }}">
+                            </div>
+                            <div class="lm-select-wrap">
+                                <label for="{{ form.read_time.id_for_label }}">{{ form.read_time.label }}</label>
+                                <input type="text" name="read_time" id="{{ form.read_time.id_for_label }}"
+                                       value="{{ form.read_time.value|default:'' }}" placeholder="{% translate 'e.g. 4 min' %}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lm-card">
+                        <div class="lm-card-body">
+                            <button type="button" class="lm-publish-btn" id="bottomSaveBtn">
+                                {% translate 'Save' %}
+                            </button>
+                            <a href="{% url 'dashboard:learning_materials:home' %}" class="lm-ghost-btn d-block text-center">
+                                {% translate 'Cancel' %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="lm-preview-overlay" id="previewOverlay">
+    <div class="lm-preview-modal">
+        <div class="lm-preview-header">
+            <h2>{% translate 'Preview' %}</h2>
+            <button type="button" class="lm-preview-close" id="previewClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="lm-preview-body" id="previewBody">
+            <div class="preview-card">
+                <div class="preview-card-thumb" id="previewThumb">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="preview-card-body">
+                    <div class="preview-card-title" id="previewTitle"></div>
+                    <div class="preview-card-summary" id="previewSummary"></div>
+                    <div class="preview-card-meta" id="previewMeta"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="lm-preview-overlay" id="confirmOverlay">
+    <div class="lm-preview-modal">
+        <div class="lm-preview-header">
+            <h2>{% translate 'Confirm' %}</h2>
+            <button type="button" class="lm-preview-close" id="confirmClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="lm-preview-body">
+            <p class="confirm-text">{% translate 'Are you sure you want to archive this material?' %}</p>
+            <div class="confirm-buttons">
+                <button type="button" class="btn btn-confirm-no" id="confirmNo">{% translate 'Cancel' %}</button>
+                <button type="button" class="btn btn-confirm-yes" id="confirmYes">{% translate 'Archive' %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+<script>
+    $(document).ready(function () {
+        // Language pills
+        $('.lm-lang-pill').on('click', function () {
+            $('.lm-lang-pill').removeClass('active');
+            $(this).addClass('active');
+            var lang = $(this).data('lang');
+            $('.lm-content-tabs').removeClass('active');
+            $('.lm-content-tabs[data-lang="' + lang + '"]').addClass('active');
+        });
+
+        // Status segmented
+        $('#statusSegmented .seg-option').on('click', function () {
+            $('#statusSegmented .seg-option').removeClass('active');
+            $(this).addClass('active');
+            $('#id_status').val($(this).data('value'));
+        });
+
+        // Type segmented
+        $('#typeSegmented .type-option').on('click', function () {
+            $('#typeSegmented .type-option').removeClass('active');
+            $(this).addClass('active');
+            $('#id_content_type').val($(this).data('value'));
+        });
+
+        // Role cards
+        $('.lm-role-card').on('click', function () {
+            $(this).toggleClass('selected');
+            var value = $(this).data('value');
+            var checkbox = $('#id_target_roles_' + $('.lm-role-card').index(this));
+            checkbox.prop('checked', !checkbox.prop('checked'));
+        });
+
+        // File dropzone
+        var dropzone = $('#dropzone');
+        var fileInput = $('#fileInput');
+
+        fileInput.on('change', function () {
+            if (this.files && this.files[0]) {
+                var name = this.files[0].name;
+                dropzone.addClass('has-file');
+                dropzone.html(
+                    '<div class="lm-dropzone-file">' +
+                    '<i class="fas fa-file-alt"></i>' +
+                    '<span>' + name + '</span>' +
+                    '<span class="remove-file" onclick="event.stopPropagation(); document.getElementById(\'fileInput\').value=\'\'; location.reload();">&times;</span>' +
+                    '</div>'
+                );
+            }
+        });
+
+        dropzone.on('dragover', function (e) {
+            e.preventDefault();
+            dropzone.addClass('has-file');
+        });
+
+        dropzone.on('dragleave', function () {
+            dropzone.removeClass('has-file');
+        });
+
+        dropzone.on('drop', function (e) {
+            e.preventDefault();
+            var files = e.originalEvent.dataTransfer.files;
+            if (files.length) {
+                fileInput.prop('files', files);
+                fileInput.trigger('change');
+            }
+        });
+
+        // Form submission
+        function submitForm() {
+            $('#learning-material-form').submit();
+        }
+
+        $('#headerSaveBtn, #bottomSaveBtn, #publishBtn').on('click', function () {
+            if ($(this).is('#publishBtn')) {
+                $('#statusSegmented .seg-option').removeClass('active');
+                $('#statusSegmented .seg-option[data-value="published"]').addClass('active');
+                $('#id_status').val('published');
+            }
+            if ($('#id_status').val() === 'archived') {
+                $('#confirmOverlay').addClass('show');
+            } else {
+                submitForm();
+            }
+        });
+
+        $('#confirmYes').on('click', function () {
+            $('#confirmOverlay').removeClass('show');
+            submitForm();
+        });
+
+        $('#confirmNo, #confirmClose, #confirmOverlay').on('click', function (e) {
+            if (e.target === this || $(this).is('#confirmNo, #confirmClose')) {
+                $('#confirmOverlay').removeClass('show');
+            }
+        });
+
+        // Preview
+        function buildPreview() {
+            var lang = $('.lm-lang-pill.active').data('lang');
+            var title = $('[name="title_' + lang + '"]').val() || $('[name="title_fr"]').val() || $('[name="title_en"]').val();
+            var summary = $('[name="summary_' + lang + '"]').val() || $('[name="summary_fr"]').val() || $('[name="summary_en"]').val();
+            var typeKey = $('#typeSegmented .type-option.active').data('value') || 'article';
+            var typeLabel = $('#typeSegmented .type-option.active').text() || 'Article';
+            var readTime = $('#id_read_time').val() || '';
+
+            var icon = 'fa-file-alt';
+            if (typeKey === 'video') icon = 'fa-video';
+            else if (typeKey === 'pdf') icon = 'fa-file-pdf';
+            $('#previewThumb').html('<i class="fas ' + icon + '"></i>');
+
+            $('#previewTitle').text(title || '{% translate "Untitled" %}');
+            $('#previewSummary').text(summary);
+
+            var metaHtml = '';
+            metaHtml += '<span class="type-pill"><i class="fas ' + icon + '" style="font-size:10px"></i> ' + typeLabel + '</span>';
+            if (readTime) {
+                metaHtml += '<span class="read-time"><i class="far fa-clock" style="font-size:11px"></i> ' + readTime + ' mins</span>';
+            }
+            $('#previewMeta').html(metaHtml);
+        }
+
+        $('.btn-lm-preview, #previewAsRoleBtn').on('click', function () {
+            buildPreview();
+            $('#previewOverlay').addClass('show');
+        });
+
+        $('.lm-preview-close, .lm-preview-overlay').on('click', function (e) {
+            if (e.target === this || $(e.target).closest('.lm-preview-close').length) {
+                $(this).closest('.lm-preview-overlay').removeClass('show');
+            }
+        });
+
+        // Keyboard shortcut for form submit
+        $(document).on('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                $('#learning-material-form').submit();
+            }
+        });
+    });
+</script>
+{% endblock %}
