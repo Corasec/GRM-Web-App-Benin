@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from dashboard.models import LearningMaterial
+from .models import LearningMaterial
 
 
 @admin.register(LearningMaterial)

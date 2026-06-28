@@ -1,4 +1,4 @@
-{% extends 'layouts/base.html' %}{% load static i18n %}
+{% extends base_template %}{% load static i18n %}
 
 {% block extracss %}
 <style>
@@ -420,7 +420,7 @@
                 <h1>{% translate 'Learning Materials' %}</h1>
                 <p>{% translate 'Create and manage training content for citizens, facilitators and village secretaries.' %}</p>
             </div>
-            <a href="{% url 'dashboard:learning_materials:create' %}" class="btn btn-lm-primary">
+            <a href="{{ lm_url_create }}" class="btn btn-lm-primary">
                 <i class="fas fa-plus"></i> {% translate 'New material' %}
             </a>
         </div>
@@ -530,7 +530,7 @@
             ordering: true,
             order: [[6, 'desc']],
             ajax: {
-                url: '{% url "dashboard:learning_materials:data" %}',
+                url: '{{ lm_url_data }}',
                 data: function (d) {
                     d.role = $('#filter-role').val();
                     d.status = $('#filter-status').val();
@@ -588,7 +588,7 @@
                 var start = info.start + 1;
                 var end = info.end;
                 var total = info.recordsDisplay;
-                $('#lmPageInfo').text('{% translate "Showing" %} ' + start + '–' + end + ' {% translate "of" %} ' + total);
+                $('#lmPageInfo').text('{% translate "Showing" %} ' + start + '\u2013' + end + ' {% translate "of" %} ' + total);
 
                 var btns = '';
                 if (info.pages > 1) {

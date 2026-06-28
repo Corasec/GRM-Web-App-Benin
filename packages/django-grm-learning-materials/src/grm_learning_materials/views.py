@@ -4,22 +4,14 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
 
-from dashboard.learning_materials.forms import LearningMaterialForm
-from dashboard.mixins import (
-    DataTableMixin,
-    PageMixin,
-    UserManagementAndAJAXMixin,
-    UserManagementPermissionMixin,
-)
-from dashboard.models import LearningMaterial
+from .conf import settings
+from .forms import LearningMaterialForm
+from .mixins import AJAXPermissionMixin, DataTableMixin, PageMixin, PermissionMixin
+from .models import LearningMaterial
 
 
-class LearningMaterialPermissionMixin(UserManagementPermissionMixin):
-    pass
-
-
-class LearningMaterialListView(PageMixin, LearningMaterialPermissionMixin, generic.TemplateView):
-    template_name = "learning_materials/list.html"
+class LearningMaterialListView(PageMixin, PermissionMixin, generic.TemplateView):
+    template_name = "grm_learning_materials/list.html"
     title = ""
     active_level1 = "learning_materials"
     breadcrumb = []
@@ -44,10 +36,14 @@ class LearningMaterialListView(PageMixin, LearningMaterialPermissionMixin, gener
         context['status_choices'] = LearningMaterial.Status.choices
         context['role_choices'] = LearningMaterial.TargetRole.choices
 
+        ns = settings.URL_NAMESPACE
+        context['lm_url_create'] = reverse_lazy(f"{ns}:create")
+        context['lm_url_data'] = reverse_lazy(f"{ns}:data")
+
         return context
 
 
-class LearningMaterialListDataView(UserManagementAndAJAXMixin, DataTableMixin, generic.View):
+class LearningMaterialListDataView(AJAXPermissionMixin, DataTableMixin, generic.View):
     def get_column_key_from_index(self, idx):
         map = {0: 'title', 1: 'category', 2: 'content_type', 3: 'roles', 4: 'languages', 5: 'status', 6: 'updated'}
         return map.get(idx)
@@ -119,6 +115,8 @@ class LearningMaterialListDataView(UserManagementAndAJAXMixin, DataTableMixin, g
             'archived': 'fa-archive',
         }.get(obj.status, 'fa-circle')
 
+        ns = settings.URL_NAMESPACE
+
         return {
             'id': obj.pk,
             'title': obj.title_fr or obj.title_en,
@@ -134,26 +132,24 @@ class LearningMaterialListDataView(UserManagementAndAJAXMixin, DataTableMixin, g
             'status': f'<span class="lm-badge status-{obj.status}"><i class="fas {status_icon}"></i>{dict(LearningMaterial.Status.choices).get(obj.status, obj.status)}</span>',
             'status_key': obj.status,
             'updated': obj.updated_date.strftime('%Y-%m-%d') if obj.updated_date else '',
-            'edit_url': reverse_lazy('dashboard:learning_materials:update', kwargs={'pk': obj.pk}),
+            'edit_url': reverse_lazy(f'{ns}:update', kwargs={'pk': obj.pk}),
         }
 
     def get(self, request, *args, **kwargs):
         return self.handle(request, *args, **kwargs)
 
 
-class LearningMaterialCreateView(PageMixin, LearningMaterialPermissionMixin, generic.CreateView):
-    template_name = "learning_materials/form.html"
+class LearningMaterialCreateView(PageMixin, PermissionMixin, generic.CreateView):
+    template_name = "grm_learning_materials/form.html"
     form_class = LearningMaterialForm
     model = LearningMaterial
     title = _("New Learning Material")
     active_level1 = "learning_materials"
-    breadcrumb = [
-        {"url": reverse_lazy("dashboard:learning_materials:home"), "title": _("Learning Materials")},
-        {"url": "", "title": _("New")},
-    ]
+    breadcrumb = []
 
     def get_success_url(self):
-        return reverse_lazy("dashboard:learning_materials:detail", kwargs={"pk": self.object.pk})
+        ns = settings.URL_NAMESPACE
+        return reverse_lazy(f"{ns}:detail", kwargs={"pk": self.object.pk})
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -168,11 +164,13 @@ class LearningMaterialCreateView(PageMixin, LearningMaterialPermissionMixin, gen
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_create'] = True
+        ns = settings.URL_NAMESPACE
+        context['lm_url_home'] = reverse_lazy(f"{ns}:home")
         return context
 
 
-class LearningMaterialUpdateView(PageMixin, LearningMaterialPermissionMixin, generic.UpdateView):
-    template_name = "learning_materials/form.html"
+class LearningMaterialUpdateView(PageMixin, PermissionMixin, generic.UpdateView):
+    template_name = "grm_learning_materials/form.html"
     form_class = LearningMaterialForm
     model = LearningMaterial
     title = ""
@@ -180,7 +178,8 @@ class LearningMaterialUpdateView(PageMixin, LearningMaterialPermissionMixin, gen
     breadcrumb = []
 
     def get_success_url(self):
-        return reverse_lazy("dashboard:learning_materials:detail", kwargs={"pk": self.object.pk})
+        ns = settings.URL_NAMESPACE
+        return reverse_lazy(f"{ns}:detail", kwargs={"pk": self.object.pk})
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -192,23 +191,31 @@ class LearningMaterialUpdateView(PageMixin, LearningMaterialPermissionMixin, gen
         )
         return response
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ns = settings.URL_NAMESPACE
+        context['lm_url_home'] = reverse_lazy(f"{ns}:home")
+        context['lm_url_update'] = reverse_lazy(f"{ns}:update", kwargs={"pk": self.object.pk})
+        return context
 
-class LearningMaterialDetailView(LearningMaterialPermissionMixin, generic.RedirectView):
+
+class LearningMaterialDetailView(PermissionMixin, generic.RedirectView):
     def get_redirect_url(self, *args, **kwargs):
-        return reverse_lazy('dashboard:learning_materials:update', kwargs={'pk': kwargs['pk']})
+        ns = settings.URL_NAMESPACE
+        return reverse_lazy(f'{ns}:update', kwargs={'pk': kwargs['pk']})
 
 
-class LearningMaterialDeleteView(PageMixin, LearningMaterialPermissionMixin, generic.DeleteView):
-    template_name = "learning_materials/confirm_delete.html"
+class LearningMaterialDeleteView(PageMixin, PermissionMixin, generic.DeleteView):
+    template_name = "grm_learning_materials/confirm_delete.html"
     model = LearningMaterial
     context_object_name = "material"
-    success_url = reverse_lazy("dashboard:learning_materials:home")
     title = _("Delete Learning Material")
     active_level1 = "learning_materials"
-    breadcrumb = [
-        {"url": reverse_lazy("dashboard:learning_materials:home"), "title": _("Learning Materials")},
-        {"url": "", "title": _("Delete")},
-    ]
+    breadcrumb = []
+
+    def get_success_url(self):
+        ns = settings.URL_NAMESPACE
+        return reverse_lazy(f"{ns}:home")
 
     def get_title(self):
         obj = self.object
@@ -217,10 +224,9 @@ class LearningMaterialDeleteView(PageMixin, LearningMaterialPermissionMixin, gen
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = self.get_title()
-        context['breadcrumb'] = [
-            {"url": reverse_lazy("dashboard:learning_materials:home"), "title": _("Learning Materials")},
-            {"url": "", "title": self.get_title()},
-        ]
+        ns = settings.URL_NAMESPACE
+        context['lm_url_home'] = reverse_lazy(f"{ns}:home")
+        context['lm_url_detail'] = reverse_lazy(f"{ns}:detail", kwargs={"pk": self.object.pk})
         return context
 
     def delete(self, request, *args, **kwargs):

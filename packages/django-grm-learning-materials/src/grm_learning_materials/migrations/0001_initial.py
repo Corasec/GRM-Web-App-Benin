@@ -1,12 +1,14 @@
+import grm_learning_materials.models
 from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    dependencies = [
-        ("dashboard", "0005_regionperformancemetrics_and_more"),
-    ]
 
-    operations = [
+    initial = True
+
+    dependencies = []
+
+    state_operations = [
         migrations.CreateModel(
             name="LearningMaterial",
             fields=[
@@ -37,6 +39,7 @@ class Migration(migrations.Migration):
                     "content_type",
                     models.CharField(
                         choices=[("article", "Article"), ("video", "Video"), ("pdf", "PDF")],
+                        default="article",
                         max_length=20,
                         verbose_name="Type",
                     ),
@@ -52,14 +55,32 @@ class Migration(migrations.Migration):
                         verbose_name="Status",
                     ),
                 ),
-                ("read_time", models.CharField(blank=True, default="", max_length=20, verbose_name="Read Time")),
+                ("read_time", models.CharField(blank=True, default="", max_length=20, verbose_name="Read Time (mins)")),
+                (
+                    "file",
+                    models.FileField(
+                        blank=True,
+                        help_text="Upload a PDF, JPG, or PNG file",
+                        null=True,
+                        upload_to=grm_learning_materials.models.learning_material_upload_path,
+                        verbose_name="File",
+                    ),
+                ),
                 ("created_date", models.DateTimeField(auto_now_add=True, verbose_name="Created Date")),
                 ("updated_date", models.DateTimeField(auto_now=True, verbose_name="Updated Date")),
             ],
             options={
                 "verbose_name": "Learning Material",
                 "verbose_name_plural": "Learning Materials",
+                "db_table": "dashboard_learningmaterial",
                 "ordering": ["-updated_date"],
             },
+        ),
+    ]
+
+    operations = [
+        migrations.SeparateDatabaseAndState(
+            state_operations=state_operations,
+            database_operations=[],
         ),
     ]

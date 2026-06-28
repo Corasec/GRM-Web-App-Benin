@@ -1,4 +1,4 @@
-{% extends 'layouts/base.html' %}{% load static i18n %}
+{% extends base_template %}{% load static i18n %}
 
 {% block extracss %}
 <style>
@@ -714,7 +714,7 @@
 
             <div class="lm-header">
                 <div class="lm-header-left">
-                    <a href="{% url 'dashboard:learning_materials:home' %}" class="lm-back-btn">
+                    <a href="{{ lm_url_home }}" class="lm-back-btn">
                         <i class="fas fa-arrow-left"></i>
                     </a>
                     <div class="lm-title-area">
@@ -912,7 +912,7 @@
                             <button type="button" class="lm-publish-btn" id="bottomSaveBtn">
                                 {% translate 'Save' %}
                             </button>
-                            <a href="{% url 'dashboard:learning_materials:home' %}" class="lm-ghost-btn d-block text-center">
+                            <a href="{{ lm_url_home }}" class="lm-ghost-btn d-block text-center">
                                 {% translate 'Cancel' %}
                             </a>
                         </div>

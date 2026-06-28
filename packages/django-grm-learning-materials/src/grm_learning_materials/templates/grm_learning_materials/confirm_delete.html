@@ -1,4 +1,4 @@
-{% extends 'layouts/base.html' %}{% load i18n %}
+{% extends base_template %}{% load i18n %}
 
 {% block content %}
 <div class="row">
@@ -22,7 +22,7 @@
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash mr-1"></i>{% translate 'Delete' %}
                     </button>
-                    <a href="{% url 'dashboard:learning_materials:detail' material.pk %}" class="btn btn-default float-right">
+                    <a href="{{ lm_url_detail }}" class="btn btn-default float-right">
                         {% translate 'Cancel' %}
                     </a>
                 </div>

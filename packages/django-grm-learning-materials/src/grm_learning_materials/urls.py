@@ -1,8 +1,8 @@
 from django.urls import path
 
-from dashboard.learning_materials import views
+from . import views
 
-app_name = "learning_materials"
+app_name = "grm_learning_materials"
 urlpatterns = [
     path("", views.LearningMaterialListView.as_view(), name="home"),
     path("data/", views.LearningMaterialListDataView.as_view(), name="data"),
