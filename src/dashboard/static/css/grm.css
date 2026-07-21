@@ -1,5 +1,17 @@
 :root {
     --primary: #24c38b;
+    --grm-yellow: rgb(180, 105, 14);
+    --grm-yellow-bg: rgb(251, 238, 221);
+}
+
+.brand-link.grm-brand {
+    background-color: var(--grm-yellow-bg) !important;
+    border-bottom: none !important;
+}
+.brand-link.grm-brand .brand-text {
+    color: var(--grm-yellow) !important;
+    font-weight: 700 !important;
+    font-size: 1.15rem;
 }
 
 a {

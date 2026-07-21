@@ -1,8 +1,11 @@
 {% load static i18n %}
 
 <!-- Main Sidebar Container -->
-<aside class="main-sidebar sidebar-light-primary sidebar-no-expand">
+<aside class="main-sidebar sidebar-light-primary">
 	<!-- Brand Logo -->
+	<a href="{% url 'dashboard:diagnostics:home' %}" class="brand-link grm-brand">
+		<span class="brand-text font-weight-light">GRM Bénin</span>
+	</a>
 
 	<!-- Sidebar -->
 	<div class="sidebar">
@@ -33,7 +36,7 @@
 				</li>
 				{% if user.grm_manager %}
 					<li class="nav-item">
-						<a href="{% url 'dashboard:grm_learning_materials:home' %}"
+						<a href="{% url 'dashboard:e3_learning_materials:home' %}"
 						   class="nav-link {% if active_level1 == 'learning_materials' %}active{% endif %}">
 							<i class="nav-icon fa fa-graduation-cap"></i>
 							<p>{% translate "Learning Materials" %}</p>

@@ -27,10 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env.read_env(str(BASE_DIR / 'grm' / '.env'))
 
-# GRM Learning Materials package configuration
-GRM_LEARNING_MATERIALS = {
+# E3 Learning Materials package configuration
+E3_LEARNING_MATERIALS = {
     "PERMISSION_CALLBACK": "dashboard.other_utils.is_grm_manager",
-    "URL_NAMESPACE": "dashboard:grm_learning_materials",
+    "URL_NAMESPACE": "dashboard:e3_learning_materials",
+    "BASE_TEMPLATE": "layouts/base.html",
 }
 
 # Serverless builds must not use a developer machine DATABASE_URL pointing at localhost.
@@ -69,7 +70,7 @@ INSTALLED_APPS = [
 CREATED_APPS = [
     "authentication",
     "dashboard",
-    "grm_learning_materials",
+    "e3_learning_materials",
     "etl",
     "issues",
     "wizard",
