@@ -1,0 +1,623 @@
+{% extends base_template %}{% load static i18n %}
+
+{% block extracss %}
+<style>
+    :root {
+        --green: #22C55E;
+        --green-light: #F0FDF4;
+        --green-border: #86EFAC;
+        --blue: #3B82F6;
+        --blue-light: #EFF6FF;
+        --orange: #F97316;
+        --orange-light: #FFF7ED;
+        --red: #EF4444;
+        --red-light: #FEF2F2;
+        --purple: #8B5CF6;
+        --purple-light: #F5F3FF;
+        --gray-50: #F8FAFC;
+        --gray-100: #F1F5F9;
+        --gray-200: #E5E7EB;
+        --gray-300: #D1D5DB;
+        --gray-400: #9CA3AF;
+        --gray-500: #6B7280;
+        --gray-600: #4B5563;
+        --gray-700: #374151;
+        --gray-800: #1F2937;
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-xl: 20px;
+        --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+        --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+    }
+
+    .lm-page {
+        min-height: calc(100vh - 120px);
+        padding: 28px 0;
+    }
+
+    .lm-page-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 28px;
+    }
+
+    .lm-page-header h1 {
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin: 0 0 4px 0;
+        letter-spacing: -0.3px;
+    }
+
+    .lm-page-header p {
+        font-size: 14px;
+        color: var(--gray-500);
+        margin: 0;
+    }
+
+    .btn-lm-primary {
+        background: var(--green);
+        border: none;
+        color: white;
+        padding: 10px 24px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 10px rgba(34, 197, 94, 0.25);
+    }
+
+    .btn-lm-primary:hover {
+        background: #16A34A;
+        box-shadow: 0 6px 14px rgba(34, 197, 94, 0.3);
+        color: white;
+    }
+
+    .lm-kpi-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .lm-kpi-card {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.2s;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .lm-kpi-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--gray-300);
+    }
+
+    .lm-kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .lm-kpi-icon.blue { background: var(--blue-light); color: var(--blue); }
+    .lm-kpi-icon.green { background: var(--green-light); color: var(--green); }
+    .lm-kpi-icon.orange { background: var(--orange-light); color: var(--orange); }
+    .lm-kpi-icon.red { background: var(--red-light); color: var(--red); }
+
+    .lm-kpi-info h3 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin: 0;
+        line-height: 1.1;
+    }
+
+    .lm-kpi-info span {
+        font-size: 13px;
+        color: var(--gray-500);
+    }
+
+    .lm-filters {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        align-items: center;
+    }
+
+    .lm-search-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 340px;
+        max-width: 340px;
+    }
+
+    .lm-search-wrap i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gray-400);
+        font-size: 15px;
+    }
+
+    .lm-search-wrap input {
+        width: 100%;
+        padding: 10px 14px 10px 40px;
+        border: 1px solid var(--gray-200);
+        border-radius: 999px;
+        font-size: 14px;
+        color: var(--gray-700);
+        background: white;
+        outline: none;
+        transition: all 0.2s;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .lm-search-wrap input:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+    }
+
+    .lm-search-wrap input::placeholder {
+        color: var(--gray-400);
+    }
+
+    .lm-filter-select {
+        padding: 10px 36px 10px 14px;
+        border: 1px solid var(--gray-200);
+        border-radius: 999px;
+        font-size: 14px;
+        color: var(--gray-600);
+        background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+        appearance: none;
+        cursor: pointer;
+        outline: none;
+        transition: all 0.2s;
+        box-shadow: var(--shadow-sm);
+        min-width: 140px;
+    }
+
+    .lm-filter-select:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+    }
+
+    .lm-table-card {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .lm-table-wrap {
+        overflow-x: auto;
+    }
+
+    .lm-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .lm-table thead th {
+        padding: 14px 20px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-align: left;
+        border-bottom: 1px solid var(--gray-200);
+        background: var(--gray-50);
+    }
+
+    .lm-table tbody tr {
+        border-bottom: 1px solid var(--gray-100);
+        transition: background 0.15s;
+        cursor: pointer;
+    }
+
+    .lm-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .lm-table tbody tr:hover {
+        background: var(--gray-50);
+    }
+
+    .lm-table tbody td {
+        padding: 16px 20px;
+        font-size: 14px;
+        color: var(--gray-700);
+        vertical-align: middle;
+    }
+
+    .lm-title-cell {
+        max-width: 260px;
+    }
+
+    .lm-title-main {
+        font-weight: 600;
+        color: var(--gray-800);
+        display: block;
+        line-height: 1.3;
+    }
+
+    .lm-title-sub {
+        font-size: 12px;
+        color: var(--gray-400);
+        display: block;
+        margin-top: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 260px;
+    }
+
+    .lm-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .lm-badge.article { background: var(--blue-light); color: var(--blue); }
+    .lm-badge.video { background: var(--red-light); color: var(--red); }
+    .lm-badge.pdf { background: var(--purple-light); color: var(--purple); }
+
+    .lm-badge.status-published { background: #F0FDF4; color: #16A34A; }
+    .lm-badge.status-draft { background: var(--orange-light); color: #D97706; }
+    .lm-badge.status-archived { background: var(--gray-100); color: var(--gray-500); }
+
+    .lm-role-chip {
+        display: inline-block;
+        padding: 2px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #EEF4FF;
+        color: #3B82F6;
+        line-height: 22px;
+        margin: 2px 3px;
+    }
+
+    .lm-lang-chip {
+        display: inline-block;
+        padding: 1px 9px;
+        border-radius: 9px;
+        font-size: 11px;
+        font-weight: 500;
+        background: #F3F4F6;
+        color: #6B7280;
+        line-height: 20px;
+        margin: 1px 3px;
+    }
+
+    .lm-date {
+        font-size: 13px;
+        color: var(--gray-500);
+        white-space: nowrap;
+    }
+
+    .lm-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .lm-pagination-info {
+        font-size: 13px;
+        color: var(--gray-500);
+    }
+
+    .lm-pagination-btns {
+        display: flex;
+        gap: 6px;
+    }
+
+    .lm-pagination-btns .btn {
+        min-width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: 1px solid var(--gray-200);
+        background: white;
+        color: var(--gray-600);
+        font-size: 13px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        padding: 0 10px;
+    }
+
+    .lm-pagination-btns .btn:hover {
+        border-color: var(--gray-300);
+        background: var(--gray-50);
+    }
+
+    .lm-pagination-btns .btn.active {
+        background: var(--green);
+        border-color: var(--green);
+        color: white;
+    }
+
+    .lm-empty {
+        padding: 60px 20px;
+        text-align: center;
+        color: var(--gray-400);
+    }
+
+    .lm-empty i {
+        font-size: 48px;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .lm-empty h4 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gray-600);
+        margin: 0 0 4px 0;
+    }
+
+    .lm-empty p {
+        font-size: 14px;
+        margin: 0;
+    }
+
+    @media (max-width: 992px) {
+        .lm-kpi-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .lm-filters {
+            flex-wrap: wrap;
+        }
+        .lm-search-wrap {
+            max-width: 100%;
+            flex: 1 1 100%;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .lm-kpi-row {
+            grid-template-columns: 1fr;
+        }
+        .lm-page-header {
+            flex-direction: column;
+            gap: 16px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lm-page">
+    <div class="container-fluid">
+        <div class="lm-page-header">
+            <div>
+                <h1>{% translate 'Learning Materials' %}</h1>
+                <p>{% translate 'Create and manage training content for citizens, facilitators and village secretaries.' %}</p>
+            </div>
+            <a href="{{ lm_url_create }}" class="btn btn-lm-primary">
+                <i class="fas fa-plus"></i> {% translate 'New material' %}
+            </a>
+        </div>
+
+        <div class="lm-kpi-row">
+            <div class="lm-kpi-card">
+                <div class="lm-kpi-icon blue"><i class="fas fa-book"></i></div>
+                <div class="lm-kpi-info">
+                    <h3>{{ kpi_total }}</h3>
+                    <span>{% translate 'Total materials' %}</span>
+                </div>
+            </div>
+            <div class="lm-kpi-card">
+                <div class="lm-kpi-icon green"><i class="fas fa-check-circle"></i></div>
+                <div class="lm-kpi-info">
+                    <h3>{{ kpi_published }}</h3>
+                    <span>{% translate 'Published' %}</span>
+                </div>
+            </div>
+            <div class="lm-kpi-card">
+                <div class="lm-kpi-icon orange"><i class="fas fa-pen"></i></div>
+                <div class="lm-kpi-info">
+                    <h3>{{ kpi_drafts }}</h3>
+                    <span>{% translate 'Drafts' %}</span>
+                </div>
+            </div>
+            <div class="lm-kpi-card">
+                <div class="lm-kpi-icon red"><i class="fas fa-users"></i></div>
+                <div class="lm-kpi-info">
+                    <h3>{{ kpi_total }}</h3>
+                    <span>{% translate 'Target roles' %}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lm-filters">
+            <div class="lm-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search" placeholder="{% translate 'Search by title or category...' %}">
+            </div>
+            <select id="filter-role" class="lm-filter-select">
+                <option value="">{% translate 'All roles' %}</option>
+                {% for value, label in role_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select id="filter-status" class="lm-filter-select">
+                <option value="">{% translate 'All statuses' %}</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select id="filter-category" class="lm-filter-select">
+                <option value="">{% translate 'All categories' %}</option>
+                {% for value, label in categories %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select id="filter-type" class="lm-filter-select">
+                <option value="">{% translate 'All types' %}</option>
+                {% for value, label in content_types %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="lm-table-card">
+            <div class="lm-table-wrap">
+                <table id="learning-materials-table" class="lm-table">
+                    <thead>
+                        <tr>
+                            <th>{% translate 'Title' %}</th>
+                            <th>{% translate 'Category' %}</th>
+                            <th>{% translate 'Type' %}</th>
+                            <th>{% translate 'Target Roles' %}</th>
+                            <th>{% translate 'Languages' %}</th>
+                            <th>{% translate 'Status' %}</th>
+                            <th>{% translate 'Updated' %}</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="lm-pagination" id="lmPagination">
+                <div class="lm-pagination-info" id="lmPageInfo"></div>
+                <div class="lm-pagination-btns" id="lmPageBtns"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+<script>
+    $(document).ready(function () {
+        var table = $('#learning-materials-table').DataTable({
+            dom: "t",
+            processing: true,
+            serverSide: true,
+            paging: true,
+            pagingType: 'full_numbers',
+            lengthChange: false,
+            pageLength: 10,
+            searching: true,
+            searchDelay: 400,
+            ordering: true,
+            order: [[6, 'desc']],
+            ajax: {
+                url: '{{ lm_url_data }}',
+                data: function (d) {
+                    d.role = $('#filter-role').val();
+                    d.status = $('#filter-status').val();
+                    d.category = $('#filter-category').val();
+                    d.content_type = $('#filter-type').val();
+                },
+                error: function () {}
+            },
+            columns: [
+                {
+                    data: null,
+                    render: function (data, type, row) {
+                        return '<span class="lm-title-main">' + row.title + '</span>' +
+                            '<span class="lm-title-sub">' + (row.summary_fr || row.summary_en || '') + '</span>';
+                    }
+                },
+                {data: 'category'},
+                {
+                    data: 'content_type',
+                    render: function (data, type, row) {
+                        var cls = row.content_type_key || 'article';
+                        var icon = 'fa-file-alt';
+                        if (cls === 'video') icon = 'fa-video';
+                        else if (cls === 'pdf') icon = 'fa-file-pdf';
+                        return '<span class="lm-badge ' + cls + '"><i class="fas ' + icon + '"></i>' + data + '</span>';
+                    }
+                },
+                {
+                    data: 'roles',
+                    orderable: false,
+                    render: function (data) {
+                        if (!data) return '-';
+                        return data;
+                    }
+                },
+                {
+                    data: 'languages',
+                    orderable: false,
+                    render: function (data) {
+                        if (!data) return '-';
+                        return data;
+                    }
+                },
+                {data: 'status'},
+                {
+                    data: 'updated',
+                    render: function (data) {
+                        return '<span class="lm-date">' + data + '</span>';
+                    }
+                }
+            ],
+            drawCallback: function (settings) {
+                var api = this.api();
+                var info = api.page.info();
+                var start = info.start + 1;
+                var end = info.end;
+                var total = info.recordsDisplay;
+                $('#lmPageInfo').text('{% translate "Showing" %} ' + start + '\u2013' + end + ' {% translate "of" %} ' + total);
+
+                var btns = '';
+                if (info.pages > 1) {
+                    btns += '<button class="btn" onclick="table.page(\'first\').draw(\'page\')"><i class="fas fa-angle-double-left"></i></button>';
+                    btns += '<button class="btn" onclick="table.page(\'previous\').draw(\'page\')"><i class="fas fa-angle-left"></i></button>';
+                    for (var i = Math.max(0, info.page - 2); i < Math.min(info.pages, info.page + 3); i++) {
+                        btns += '<button class="btn' + (i === info.page ? ' active' : '') + '" onclick="table.page(' + i + ').draw(\'page\')">' + (i + 1) + '</button>';
+                    }
+                    btns += '<button class="btn" onclick="table.page(\'next\').draw(\'page\')"><i class="fas fa-angle-right"></i></button>';
+                    btns += '<button class="btn" onclick="table.page(\'last\').draw(\'page\')"><i class="fas fa-angle-double-right"></i></button>';
+                }
+                $('#lmPageBtns').html(btns);
+            }
+        });
+
+        $('#search').on('keyup', function () {
+            table.search($(this).val()).draw();
+        });
+
+        $('#filter-role, #filter-status, #filter-category, #filter-type').on('change', function () {
+            table.draw();
+        });
+
+        $('#learning-materials-table tbody').on('click', 'tr', function () {
+            var data = table.row(this).data();
+            if (data && data.edit_url) {
+                window.location.href = data.edit_url;
+            }
+        });
+    });
+</script>
+{% endblock %}

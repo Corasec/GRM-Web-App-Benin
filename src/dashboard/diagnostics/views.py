@@ -94,13 +94,15 @@ class IssuesStatisticsView(LoginRequiredAndAJAXRequestMixin, generic.View):
         region_id = request.GET.get('region')
 
         # Get base/root region with prefetch
+        root_regions = None
         if region_id:
             try:
                 root_region = AdministrativeRegion.objects.select_related('parent').get(id=region_id)
             except AdministrativeRegion.DoesNotExist:
                 return JsonResponse({"error": "Region not found"})
         else:
-            root_region = AdministrativeRegion.objects.get(parent__isnull=True)
+            root_regions = list(AdministrativeRegion.objects.filter(parent__isnull=True))
+            root_region = root_regions[0] if root_regions else None
 
         # Build filters for issues
         filters = Q(confirmed=True)
@@ -151,8 +153,11 @@ class IssuesStatisticsView(LoginRequiredAndAJAXRequestMixin, generic.View):
                 }
             )
 
-        # Get region stats efficiently - solo regiones con issues
-        region_stats = self.get_region_stats_optimized(filters, root_region, total_issues)
+        # Get region stats efficiently
+        if root_regions and len(root_regions) > 1:
+            region_stats = {}
+        else:
+            region_stats = self.get_region_stats_optimized(filters, root_region, total_issues)
 
         # Single query to get all statistics using annotations (for the filtered branch)
         issues_stats = Issue.objects.filter(filters).aggregate(

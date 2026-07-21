@@ -36,6 +36,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("authentication/", include("authentication.urls")),
     path("issues/", include("issues.urls")),
+    path("api/learning-materials/", include("e3_learning_materials.api_urls")),
     path("i18n/", include("django.conf.urls.i18n")),
     path("", include("dashboard.urls")),
     path("wizard/", include("wizard.urls")),
@@ -66,7 +67,8 @@ if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     # Only include debug_toolbar if it's installed (dev dependency)
     try:
-        import debug_toolbar
+        import debug_toolbar  # noqa: F401
+
         urlpatterns += [path("__debug__/", include("debug_toolbar.urls"))]
     except ImportError:
         pass
