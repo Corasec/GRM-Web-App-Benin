@@ -12,8 +12,10 @@ from grm.constants import (
     CONTACT_MEDIUM_ERROR_MESSAGE,
     EMAIL_CHOICE,
     ESCALATION_CLOSED_ISSUE_MESSAGE,
+    ESCALATION_NOT_ACCEPTED_MESSAGE,
     ESCALATION_NO_HIGHER_COMMITTEE_MESSAGE,
     ESCALATION_REASON_REQUIRED_MESSAGE,
+    ISSUE_CLOSED_ERROR_MESSAGE,
     ISSUE_UPDATE_APPEAL_STATUS_ERROR_MESSAGE,
     ISSUE_UPDATE_ESCALATE_ERROR_MESSAGE,
     ISSUE_UPDATE_RATING_ERROR_MESSAGE,
@@ -450,9 +452,16 @@ class IssueUpdateSerializer(serializers.ModelSerializer):
         if 'escalate_flag' in attrs and user.id != getattr(issue, "assignee_id", None):
             raise MethodNotAllowed(method='PATCH', detail=ISSUE_UPDATE_ESCALATE_ERROR_MESSAGE)
 
+        # A resolved or rejected issue is closed: only the reporter's rating can still be given.
+        if not can_be_escalated(issue) and set(attrs) - {'rating'}:
+            raise serializers.ValidationError(ISSUE_CLOSED_ERROR_MESSAGE)
+
         # Escalation requested by the committee: it is executed right away by the view
         # (the committee loses the issue), so check it can actually happen.
         if attrs.get('escalate_flag') is True and not issue.escalate_flag:
+            # Accepting the issue proves the committee took it in charge: escalation comes after
+            if issue.status and issue.status.initial_status:
+                raise serializers.ValidationError({"escalate_flag": ESCALATION_NOT_ACCEPTED_MESSAGE})
             if not (attrs.get('escalation_reason') or '').strip():
                 raise serializers.ValidationError({"escalation_reason": ESCALATION_REASON_REQUIRED_MESSAGE})
             if not can_be_escalated(issue):

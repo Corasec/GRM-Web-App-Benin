@@ -3026,3 +3026,11 @@ msgstr "Cette plainte est clôturée ; elle ne peut pas être remontée."
 #: issues/serializers.py dashboard/grm/views.py
 msgid "This issue is closed; it cannot be de-escalated."
 msgstr "Cette plainte est clôturée ; elle ne peut pas être redescendue."
+
+#: issues/serializers.py issues/permissions.py
+msgid "Accept the issue before escalating it."
+msgstr "Acceptez la plainte avant de la remonter."
+
+#: issues/serializers.py issues/permissions.py
+msgid "This issue is resolved or rejected: it can no longer be modified."
+msgstr "Cette plainte est résolue ou rejetée : elle ne peut plus être modifiée."
