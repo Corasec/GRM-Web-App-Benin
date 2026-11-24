@@ -12,6 +12,8 @@ Source: [`src/wizard/`](../src/wizard) · UI JS: [`src/dashboard/static/js/wizar
 
 The GRM codebase ships with no taxonomy of its own. Administrative levels, departments, issue types, categories, statuses, citizen groups and project components are all **configured per deployment**, and the wizard is the tool that does it. Until it is finished the application is unusable — that is deliberate, because case routing (`IssueCategory → IssueDepartmentAdministrativeLevel`) and the status machine cannot function against empty tables.
 
+> **Faster:** every step can be filled at once from an Excel workbook — card *Import from Excel* in the wizard, or `manage.py import_configuration`. See [excel-import.md](excel-import.md).
+
 It runs **once per installation**. After completion the wizard URL returns 404 and later changes are made through the Django admin or the limited [settings](../src/dashboard/settings/urls.py) screens.
 
 ---
@@ -242,7 +244,7 @@ This is the only **nested** formset. Each component row (name + description) car
 
 Rules:
 
-- At least one component; **each component must have at least one subcomponent** (`SubComponentInlineFormSet.clean()`), unless the component itself is marked for deletion.
+- At least one component; **subcomponents are optional** (Benin only asks for the component).
 - Description is required on both levels.
 - Components and subcomponents referenced by issues cannot be deleted, checked at both levels.
 

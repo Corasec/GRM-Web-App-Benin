@@ -11,7 +11,6 @@ from wizard.constants import (
     ITEM_DELETE_ERROR_MESSAGE,
     ITEM_TOAST_ERROR_MESSAGE,
     NOT_PERMITTED_TEXT,
-    SUBCOMPONENT_REQUIRED_ERROR_MESSAGE,
 )
 from wizard.models import WizardSection
 from wizard.registry import get_next_step, get_step_by_name
@@ -133,7 +132,7 @@ class ComponentAndSubComponentFormViewTest(ViewTestCase):
         self.assertEqual(sub.name, "Updated Sub")
 
     def test_post_without_subcomponent(self):
-        """Should raise validation error because at least one subcomponent is required."""
+        """Subcomponents are optional (e.g. Benin only asks for the component)."""
         component = ComponentFactory(name="Old Component")
 
         data = {
@@ -144,15 +143,18 @@ class ComponentAndSubComponentFormViewTest(ViewTestCase):
             "form-0-id": component.id,
             "form-0-name": "Updated Component",
             "form-0-description": "Updated description",
+            "subcomponent_form-0-TOTAL_FORMS": "0",
+            "subcomponent_form-0-INITIAL_FORMS": "0",
+            "subcomponent_form-0-MIN_NUM_FORMS": "0",
+            "subcomponent_form-0-MAX_NUM_FORMS": "100",
         }
 
         response = self.post(self.url, data, ajax=True)
-        self.assertEqual(response.status_code, 200)
-
-        self.assertIn(SUBCOMPONENT_REQUIRED_ERROR_MESSAGE, response.context['formset'].subformsets[0].non_form_errors())
+        self.assertEqual(response.status_code, 302)
 
         component.refresh_from_db()
-        self.assertEqual(component.name, "Old Component")
+        self.assertEqual(component.name, "Updated Component")
+        self.assertFalse(SubComponent.objects.filter(parent=component).exists())
 
     def test_post_can_delete_components_but_not_all(self):
         """Deletes the selected components but does not allow deleting all."""
@@ -265,12 +267,10 @@ class ComponentAndSubComponentFormViewTest(ViewTestCase):
             "subcomponent_form-0-0-DELETE": "on",
         }
 
+        # The last subcomponent can be deleted too: subcomponents are optional
         response = self.post(self.url, data, ajax=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(SubComponent.objects.count(), 1)
-        self.assertTrue(SubComponent.objects.filter(id=subcomponents[1].id).exists())
-
-        self.assertIn(SUBCOMPONENT_REQUIRED_ERROR_MESSAGE, response.context['formset'].subformsets[0].non_form_errors())
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(SubComponent.objects.count(), 0)
 
     def test_cannot_delete_component_in_use(self):
         """Should raise validation error when deleting a component referenced by an Issue."""

@@ -5,9 +5,10 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.core.exceptions import PermissionDenied
 from django.db.models import Exists, OuterRef, Q
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import ListView, TemplateView, UpdateView, View
@@ -55,6 +56,7 @@ from wizard.forms import (
     SubComponentFormSet,
     UploadAdministrativeRegionForm,
 )
+from wizard.importer import ConfigurationImportError, import_configuration
 from wizard.models import WizardSection
 from wizard.registry import (
     get_next_step,
@@ -855,3 +857,41 @@ class SummaryView(LoginRequiredAndAJAXRequestMixin, TemplateView):
         current_section = WizardSection.objects.get(step=self.get_step_number())
         current_section.status = cons.COMPLETED_CHOICE
         current_section.save(update_fields=['status'])
+
+
+class ConfigurationImportView(LoginRequiredMixin, View):
+    """
+    Import the whole configuration from one Excel workbook (see docs/excel-import.md), then land on
+    the summary to review and validate it. Only for the GRM owner while the wizard is not finished
+    (the wizard middleware already hides the wizard from everybody else).
+    """
+
+    def post(self, request, *args, **kwargs):
+        if not (request.user.grm_owner or request.user.is_superuser):
+            raise PermissionDenied
+        upload = request.FILES.get("configuration_file")
+        if not upload:
+            messages.error(request, _("Select the Excel configuration file to import."))
+            return redirect("wizard:customization_wizard")
+        try:
+            report = import_configuration(upload)
+        except ConfigurationImportError as error:
+            messages.error(
+                request,
+                _("Import refused, nothing was written: %(errors)s") % {"errors": " | ".join(error.errors[:15])},
+            )
+            return redirect("wizard:customization_wizard")
+
+        details = ", ".join(f"{count} {label}" for label, count in report.counts.items())
+        messages.success(
+            request,
+            _("Configuration imported (%(details)s). Review the summary and validate it.") % {"details": details},
+        )
+        for warning in report.warnings:
+            messages.warning(request, warning)
+        summary = WizardSection.objects.filter(name=cons.SUMMARY_CHOICE).first()
+        url = reverse("wizard:customization_wizard")
+        return redirect(f"{url}?step={summary.step}" if summary else url)
+
+    def get(self, request, *args, **kwargs):
+        return redirect("wizard:customization_wizard")

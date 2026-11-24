@@ -487,3 +487,27 @@ class UserUpdateForm(forms.ModelForm):
                 facilitator.villages.set(self.cleaned_data.get("villages") or [])
 
         return user
+
+
+class AccountsImportForm(forms.Form):
+    """Excel workbook of accounts + the initial password given to every created account."""
+
+    accounts_file = forms.FileField(
+        label=_("Accounts workbook (.xlsx)"),
+        widget=forms.ClearableFileInput(attrs={"accept": ".xlsx", "class": "form-control-file"}),
+    )
+    password = forms.CharField(
+        label=_("Initial password"),
+        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
+        help_text=_("Same initial password for every created account: at least 8 characters with letters and digits."),
+    )
+    confirm_password = forms.CharField(
+        label=_("Confirm the password"),
+        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("password") != cleaned_data.get("confirm_password"):
+            self.add_error("confirm_password", _("The passwords do not match."))
+        return cleaned_data

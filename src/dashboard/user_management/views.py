@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
 
+from authentication.importer import AccountsImportError, import_accounts
 from authentication.models import User
 from authentication.utils import get_validation_code
 from dashboard.constants import (
@@ -39,6 +40,7 @@ from dashboard.user_management.constants import (
     USER_UPDATED_SUCCESS_MESSAGE,
 )
 from dashboard.user_management.forms import (
+    AccountsImportForm,
     CaseManagerCreationForm,
     FacilitatorCreationForm,
     GRMManagerCreationForm,
@@ -519,3 +521,26 @@ class EditUserProfileFormView(
             "photo": user.photo.url if user.photo else self.picture,
         }
         return JsonResponse(context, safe=False)
+
+
+class AccountsImportView(PageMixin, UserManagementPermissionMixin, generic.FormView):
+    """
+    Create committee and field staff accounts from an Excel workbook (see docs/excel-import.md).
+    GRM managers only. The initial password is typed in the form, never stored in the file.
+    """
+
+    template_name = "user_management/import_accounts.html"
+    form_class = AccountsImportForm
+    title = _("Import accounts")
+    active_level1 = "user_management"
+    breadcrumb = [
+        {"url": reverse_lazy("dashboard:user_management:home"), "title": _("User Management")},
+        {"url": "", "title": _("Import accounts")},
+    ]
+
+    def form_valid(self, form):
+        try:
+            report = import_accounts(form.cleaned_data["accounts_file"], form.cleaned_data["password"])
+        except AccountsImportError as error:
+            return self.render_to_response(self.get_context_data(form=form, import_errors=error.errors))
+        return self.render_to_response(self.get_context_data(form=self.form_class(), report=report))

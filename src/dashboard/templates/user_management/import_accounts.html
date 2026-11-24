@@ -1,0 +1,50 @@
+{% extends 'layouts/base.html' %}{% load bootstrap4 i18n %}
+
+{% block content %}
+	<div class="row">
+		<div class="col-md-8">
+			<div class="card">
+				<div class="card-header">
+					<h3 class="card-title">{% translate 'Import accounts from Excel' %}</h3>
+				</div>
+				<form method="post" enctype="multipart/form-data">
+					{% csrf_token %}
+					<div class="card-body">
+						<p class="text-muted">
+							{% translate 'Creates the committee accounts (CCGP, CLGP, national committee) and the field staff accounts (FC, SC) with their covered villages. The login identifier is the email. Existing emails are skipped. The file is fully checked first: if there is an error, nothing is created.' %}
+						</p>
+						{% if import_errors %}
+							<div class="alert alert-danger">
+								<strong>{% translate 'Import refused, nothing was created:' %}</strong>
+								<ul class="mb-0">
+									{% for error in import_errors|slice:":30" %}<li>{{ error }}</li>{% endfor %}
+								</ul>
+								{% if import_errors|length > 30 %}<small>{% blocktranslate count n=import_errors|length %}{{ n }} error in total{% plural %}{{ n }} errors in total{% endblocktranslate %}</small>{% endif %}
+							</div>
+						{% endif %}
+						{% if report %}
+							<div class="alert alert-success">
+								<strong>{% translate 'Accounts imported:' %}</strong>
+								{% for label, count in report.counts.items %}{{ count }} {{ label }}{% if not forloop.last %}, {% endif %}{% endfor %}
+							</div>
+							{% if report.skipped %}
+								<div class="alert alert-warning">
+									<ul class="mb-0">{% for line in report.skipped %}<li>{{ line }}</li>{% endfor %}</ul>
+								</div>
+							{% endif %}
+						{% endif %}
+						{% bootstrap_field form.accounts_file %}
+						<div class="row">
+							<div class="col-md-6">{% bootstrap_field form.password %}</div>
+							<div class="col-md-6">{% bootstrap_field form.confirm_password %}</div>
+						</div>
+					</div>
+					<div class="card-footer">
+						<button type="submit" class="btn btn-primary"><i class="fas fa-file-import mr-1"></i>{% translate 'Import' %}</button>
+						<a href="{% url 'dashboard:user_management:home' %}" class="btn btn-default">{% translate 'Back' %}</a>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+{% endblock %}

@@ -7,6 +7,7 @@ urlpatterns = [
     path("", views.UserManagementTemplateView.as_view(), name="home"),
     path("list/", views.UserListView.as_view(), name="list"),
     path("create/", views.CreateUserView.as_view(), name="create"),
+    path("import/", views.AccountsImportView.as_view(), name="import_accounts"),
     path("<int:pk>/", views.UserDetailView.as_view(), name="detail"),
     path("<int:pk>/update/", views.UserUpdateView.as_view(), name="update"),
     path(

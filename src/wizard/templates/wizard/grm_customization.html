@@ -72,6 +72,23 @@
 								</div>
 							</div>
 						</div>
+						<div class="card mt-3">
+							<div class="card-header">
+								<h3 class="card-title">{% translate "Import from Excel" %}</h3>
+							</div>
+							<div class="card-body">
+								<p class="text-muted small mb-2">
+									{% translate "Fill every step at once from a configuration workbook (levels, hierarchy, committees, types and categories, age groups, components). It replaces the current configuration; you then review the summary and validate it." %}
+								</p>
+								<form method="post" enctype="multipart/form-data" action="{% url 'wizard:import_configuration' %}">
+									{% csrf_token %}
+									<input type="file" name="configuration_file" accept=".xlsx" class="form-control-file mb-2" required>
+									<button type="submit" class="btn btn-outline-primary btn-sm">
+										<i class="fas fa-file-import mr-1"></i>{% translate "Import" %}
+									</button>
+								</form>
+							</div>
+						</div>
 					</div>
 					<div class="col-md-7 d-flex flex-column">
 						<div class="card h-100 d-flex flex-column">

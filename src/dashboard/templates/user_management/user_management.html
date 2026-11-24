@@ -8,6 +8,11 @@
 			<div class="card mb-4">
 				<div class="card-header">
 					<h3 class="card-title">{% translate 'Add New User' %}</h3>
+					<div class="card-tools">
+						<a href="{% url 'dashboard:user_management:import_accounts' %}" class="btn btn-sm btn-outline-primary">
+							<i class="fas fa-file-import mr-1"></i>{% translate 'Import accounts from Excel' %}
+						</a>
+					</div>
 				</div>
 				<div class="card-body">
 					<!-- Tabs Navigation -->
