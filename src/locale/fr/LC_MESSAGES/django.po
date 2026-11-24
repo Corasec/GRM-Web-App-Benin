@@ -3066,3 +3066,7 @@ msgstr "ex. 3"
 #: issues/models.py dashboard/templates/grm
 msgid "Committee time"
 msgstr "Délai du comité"
+
+#: issues/serializers.py
+msgid "This tracking code is already used by another issue."
+msgstr "Ce code de suivi est déjà utilisé par une autre plainte."

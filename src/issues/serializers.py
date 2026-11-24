@@ -16,6 +16,7 @@ from grm.constants import (
     ESCALATION_NOT_ACCEPTED_MESSAGE,
     ESCALATION_REASON_REQUIRED_MESSAGE,
     ISSUE_CLOSED_ERROR_MESSAGE,
+    TRACKING_CODE_ALREADY_USED_MESSAGE,
     ISSUE_UPDATE_APPEAL_STATUS_ERROR_MESSAGE,
     ISSUE_UPDATE_ESCALATE_ERROR_MESSAGE,
     ISSUE_UPDATE_RATING_ERROR_MESSAGE,
@@ -426,6 +427,12 @@ class IssueCreateSerializer(serializers.ModelSerializer):
         # the clear contact must never stay in the issue table.
         issue.save(update_fields=["contact_information"])
         return issue
+
+    def validate_tracking_code(self, value):
+        """The tracking code identifies the complaint for the complainant: it must be unique."""
+        if value and Issue.objects.filter(tracking_code=value).exists():
+            raise serializers.ValidationError(TRACKING_CODE_ALREADY_USED_MESSAGE)
+        return value
 
     def validate(self, data):
         """

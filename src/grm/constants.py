@@ -127,6 +127,7 @@ ESCALATION_CLOSED_ISSUE_MESSAGE = _('A resolved or rejected issue cannot be esca
 ESCALATION_NO_HIGHER_COMMITTEE_MESSAGE = _('There is no higher committee to escalate this issue to.')
 ESCALATION_NOT_ACCEPTED_MESSAGE = _('Accept the issue before escalating it.')
 ISSUE_CLOSED_ERROR_MESSAGE = _('This issue is resolved or rejected: it can no longer be modified.')
+TRACKING_CODE_ALREADY_USED_MESSAGE = _('This tracking code is already used by another issue.')
 ISSUE_RETRIEVE_ERROR_MESSAGE = _('An error occurred while retrieving the issue.')
 ISSUE_LIST_ERROR_MESSAGE = _("Invalid datetime format. Use ISO 8601 (e.g. 2021-03-23T10:30:45Z).")
 COMMENT_CREATE_SUCCESS_MESSAGE = _('Comment added successfully.')
