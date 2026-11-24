@@ -294,3 +294,17 @@ class LoginAPIViewTest(APITestCase):
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert response.data['error'] == MOBILE_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE
         assert not Token.objects.filter(user__username="manager").exists()
+
+    def test_committee_account_can_login_with_its_email(self):
+        """The mobile login screen asks for an email; committee usernames differ from emails."""
+        committee_user = UserFactory(
+            username="clgp-malanville", email="clgp.malanville@example.com", password="secret-pass-3", is_active=True
+        )
+        GovernmentWorkerFactory(user=committee_user, administrative_region=self.user.facilitator.administrative_region)
+
+        response = self.client.post(
+            self.url, {'username': "CLGP.Malanville@example.com", 'password': "secret-pass-3"}, format='json'
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['user_id'] == committee_user.id

@@ -132,10 +132,14 @@ class BaseLoginAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        username = serializer.validated_data["username"]
+        username = self.resolve_username(serializer.validated_data["username"])
         password = serializer.validated_data["password"]
 
         return self.handle_login(username, password)
+
+    def resolve_username(self, username):
+        """Hook for subclasses to map the submitted identifier to a username."""
+        return username
 
 
 class LoginAPIView(BaseLoginAPIView):
@@ -208,6 +212,17 @@ class LoginAPIView(BaseLoginAPIView):
     )
     def post(self, request):
         return super().post(request)
+
+    def resolve_username(self, username):
+        """
+        The mobile login screen asks for an email: accept the account email as well as the
+        username (committee accounts created from the dashboard have a separate username).
+        """
+        if "@" in username and not User.objects.filter(username=username).exists():
+            user = User.objects.filter(email__iexact=username).only("username").first()
+            if user:
+                return user.username
+        return username
 
     def extra_validations(self, user):
         """The mobile app is only for committee accounts and facilitators."""
