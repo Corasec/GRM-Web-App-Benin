@@ -129,7 +129,7 @@ then finish the wizard summary in the browser. File format: `docs/excel-import.m
 
 ### 4.3 Create the mobile accounts
 
-Dashboard → **User Management → "Import accounts from Excel"** → `config-coso/import_comptes_coso.xlsx`, and type the **initial password** given to every account (at least 8 characters with letters and digits: rule of the mobile login screen). Or:
+Dashboard → **User Management → "Import accounts from Excel"** → `config-coso/import_comptes_coso.xlsx`, and type the **initial password** given to every account (at least 8 characters with letters and digits). Or:
 
 ```bash
 docker compose cp import_comptes_coso.xlsx django-app:/tmp/
