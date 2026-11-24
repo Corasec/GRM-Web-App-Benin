@@ -25,7 +25,7 @@ from openpyxl import load_workbook
 from authentication.models import Facilitator, GovernmentWorker, User
 from issues.models import AdministrativeRegion, IssueDepartment
 
-# Same rule as the mobile login screen: at least 8 characters with letters and digits
+# Minimum strength of the shared initial password: at least 8 characters with letters and digits
 PASSWORD_PATTERN = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
 FIELD_ROLES = {"FC": Facilitator.ROLE_COMMUNITY_FACILITATOR, "SC": Facilitator.ROLE_COMMUNAL_SUPERVISOR}
 
@@ -56,7 +56,7 @@ def validate_password(password):
         raise AccountsImportError(
             [
                 "Le mot de passe initial doit faire au moins 8 caractères et contenir des lettres et des chiffres "
-                "(règle de l'écran de connexion de l'application)."
+                "(règle commune des mots de passe de l'application)."
             ]
         )
 
