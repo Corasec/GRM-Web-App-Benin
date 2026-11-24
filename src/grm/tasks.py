@@ -1,3 +1,5 @@
+import logging
+
 import cryptocode
 from celery import shared_task
 from celery.schedules import crontab
@@ -28,23 +30,39 @@ from sms_client import send_sms
 
 COUCHDB_GRM_DATABASE = settings.COUCHDB_GRM_DATABASE
 
+logger = logging.getLogger(__name__)
+
+
+ANONYMIZED_VALUE = "*"
+
+
+def _issues_needing_backfill():
+    """
+    Confirmed issues for which at least one backfill step is still pending:
+    no internal code, citizen name not anonymized yet, contact not anonymized yet,
+    or no assignee.
+    """
+    missing_internal_code = Q(internal_code__isnull=True) | Q(internal_code="")
+    citizen_not_anonymized = Q(citizen__isnull=False) & ~Q(citizen__name=ANONYMIZED_VALUE)
+    contact_not_anonymized = Q(contact_information__isnull=False) & ~Q(contact_information__in=["", ANONYMIZED_VALUE])
+    missing_assignee = Q(assignee__isnull=True)
+
+    return (
+        Issue.objects.filter(confirmed=True)
+        .filter(missing_internal_code | citizen_not_anonymized | contact_not_anonymized | missing_assignee)
+        .select_related('administrative_region', 'category', 'citizen')
+    )
+
 
 @app.task
 def check_issues():
     """
     Check the issues without internal_code, citizen information anonymization
-    or assignee, and try to set a value for these fields
-    """
+    or assignee, and try to set a value for these fields.
 
-    issues = Issue.objects.filter(
-        Q(confirmed=True)
-        & (
-            Q(internal_code_in=[None, ""])
-            | ~Q(citizen_in=[None, ""])
-            | ~Q(contact_information__in=[None, "", "*"])
-            | Q(assignee_in=[None, ""])
-        )
-    ).select_related('administrative_region', 'category')
+    Each step of each issue is isolated: a failure is recorded in ``result["errors"]``
+    and never prevents the other steps or the other issues from being processed.
+    """
     result = {
         "errors": [],
         "internal_code_updated": [],
@@ -52,51 +70,65 @@ def check_issues():
         "assignee_updated": [],
     }
     updated_issues = 0
-    for issue in issues:
-        internal_code_updated = False
-        anonymized_data = False
-        assignee_updated = False
+    for issue in _issues_needing_backfill():
+        changed = False
+        new_assignee = None
 
         # set internal_code if needed
         if not issue.internal_code:
-            issue.internal_code = issue.get_internal_code()
-            internal_code_updated = True
-            result["internal_code_updated"].append(issue.id)
+            try:
+                issue.internal_code = issue.get_internal_code()
+                changed = True
+                result["internal_code_updated"].append(issue.id)
+            except Exception:
+                logger.exception("check_issues: cannot compute internal code for issue %s", issue.id)
+                result["errors"].append(f"Error trying to set internal code for issue with id {issue.id}")
 
-        # anonimyzed when indicated
-        contact_information = issue.contact_information
+        # anonymize citizen name and contact information when not done yet
         citizen = issue.citizen
-        if citizen and citizen.name != "*" or (contact_information and contact_information != "*"):
+        contact_information = issue.contact_information
+        if (citizen and citizen.name != ANONYMIZED_VALUE) or (
+            contact_information and contact_information != ANONYMIZED_VALUE
+        ):
             try:
                 issue.anonymize_issue_data()
-                anonymized_data = True
+                changed = True
                 result["anonymized_data"].append(issue.id)
             except Exception:
-                error = f"Error trying to anonymize issue document with id {issue.id}"
-                result["errors"].append(error)
+                logger.exception("check_issues: cannot anonymize issue %s", issue.id)
+                result["errors"].append(f"Error trying to anonymize issue with id {issue.id}")
 
-        # set assignee if not define yet
-        if not issue.assignee:
+        # set assignee if not defined yet
+        if not issue.assignee_id:
             try:
-                assignee = issue.get_assignee()
-                issue.assignee = assignee
-                if assignee:
-                    assignee_updated = True
-                    result["assignee_updated"].append(issue.id)
-
-                    # Add comment to the issue
-                    Comment.objects.create(
-                        user=None,  # take None like user system
-                        comment=_("The issue has been assigned to %s.") % assignee.name,
-                        issue=issue,
-                    )
+                new_assignee = issue.get_assignee()
+                if new_assignee:
+                    issue.assignee = new_assignee
+                    changed = True
             except Exception:
-                error = f"Error trying to set assignee for issue document with id {issue.id}"
-                result["errors"].append(error)
+                new_assignee = None
+                logger.exception("check_issues: cannot find an assignee for issue %s", issue.id)
+                result["errors"].append(f"Error trying to set assignee for issue with id {issue.id}")
 
-        if internal_code_updated or anonymized_data or assignee_updated:
+        if not changed:
+            continue
+
+        try:
             issue.save()
-            updated_issues += 1
+        except Exception:
+            logger.exception("check_issues: cannot save issue %s", issue.id)
+            result["errors"].append(f"Error trying to save issue with id {issue.id}")
+            continue
+
+        updated_issues += 1
+        if new_assignee:
+            result["assignee_updated"].append(issue.id)
+            # System comment (user=None), created only once the assignment is persisted
+            Comment.objects.create(
+                user=None,
+                comment=_("The issue has been assigned to %s.") % new_assignee.name,
+                issue=issue,
+            )
 
     result["updated_issues"] = updated_issues
     return result
