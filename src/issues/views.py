@@ -40,6 +40,7 @@ from grm.constants import (
     VALIDATION_FAILED_MESSAGE,
 )
 from grm.notifications import send_issue_notification
+from issues.escalation import escalate_issue
 from issues.models import (
     AdministrativeRegion,
     CitizenAgeGroup,
@@ -2987,6 +2988,7 @@ class IssueUpdateAPIView(UpdateAPIView):
             # Save the previous status and appeal_status to detect changes
             old_status_id = instance.status_id if instance.status else None
             old_appeal_status = instance.appeal_status
+            old_escalate_flag = instance.escalate_flag
 
             serializer = self.get_serializer(instance, data=request.data, partial=True)
             if serializer.is_valid():
@@ -3005,6 +3007,10 @@ class IssueUpdateAPIView(UpdateAPIView):
                         logger.error(
                             f"Failed to send status change notification for issue {updated_issue.id}: {str(e)}"
                         )
+
+                # Escalation requested by the committee: reassign to the next committee right away
+                if not old_escalate_flag and updated_issue.escalate_flag:
+                    escalate_issue(updated_issue, user=request.user, reason=updated_issue.escalation_reason or "")
 
                 # Send notification if change appeal_status to True
                 if not old_appeal_status and updated_issue.appeal_status:

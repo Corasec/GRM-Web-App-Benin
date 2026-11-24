@@ -4,6 +4,7 @@ from django.utils import timezone
 from authentication.factories import GovernmentWorkerFactory, UserFactory
 from grm.tests.base import DashboardTestCase
 from issues.factories import AdministrativeRegionFactory, IssueFactory, IssueStatusFactory
+from issues.models import IssueDepartmentAdministrativeLevel
 
 
 class EscalateIssueViewTest(DashboardTestCase):
@@ -14,6 +15,10 @@ class EscalateIssueViewTest(DashboardTestCase):
         # Regions: root -> region (child)
         self.region = AdministrativeRegionFactory(parent=self.root_region)
         self.issue = IssueFactory(confirmed=True, administrative_region=self.region)
+        # Committees are attached to their level in the wizard (CCGP at village, CLGP at commune, ...)
+        department = self.issue.category.assigned_department.department
+        for level in {self.region.administrative_level, self.root_region.administrative_level}:
+            IssueDepartmentAdministrativeLevel.objects.get_or_create(department=department, administrative_level=level)
         self.url = reverse("dashboard:grm:escalate_issue", kwargs={"issue": self.issue.id})
 
     def test_post_success_by_grm_manager_escalates_to_parent_worker(self):
@@ -38,7 +43,10 @@ class EscalateIssueViewTest(DashboardTestCase):
         assert "msg" in data
         assert data.get("assignee", {}).get("id") == parent_worker.id
         assert data.get("access_denied") is False
-        assert data["administrative_level"] == parent_worker.governmentworker.administrative_region.administrative_level.name
+        assert (
+            data["administrative_level"]
+            == parent_worker.governmentworker.administrative_region.administrative_level.name
+        )
         assert data["department"] == parent_worker.governmentworker.department.name
 
         # DB assertions

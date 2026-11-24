@@ -105,10 +105,9 @@ class IssueUpdateAPIViewTest(APITestCase):
         self.authenticate_with_token(self.assignee_token)
 
         # Assignee should be able to update status and general fields, but not rating
+        # (escalation is covered by issues/tests/integration_tests/test_issue_escalation.py)
         allowed_data = {
-            'escalate_flag': True,
             'reject_flag': False,
-            'escalation_reason': 'Issue requires higher level approval',
             'status': self.new_status.id,
         }
 
@@ -164,7 +163,7 @@ class IssueUpdateAPIViewTest(APITestCase):
         """Test that user who is both reporter and assignee can update status, rating and escalate_flag."""
         self.authenticate_with_token(self.reporter_assignee_token)
 
-        both_fields_data = {'status': self.new_status.id, 'rating': 5, 'escalate_flag': True}
+        both_fields_data = {'status': self.new_status.id, 'rating': 5}
         url_reporter_assignee = reverse("issues:update-issue", kwargs={"id": self.issue_reporter_assignee.id})
         response = self.client.patch(url_reporter_assignee, both_fields_data, format='json')
 
@@ -175,21 +174,31 @@ class IssueUpdateAPIViewTest(APITestCase):
         self.issue_reporter_assignee.refresh_from_db()
         self.assertEqual(self.issue_reporter_assignee.status.id, self.new_status.id)
         self.assertEqual(self.issue_reporter_assignee.rating, 5)
-        self.assertTrue(self.issue_reporter_assignee.escalate_flag)
 
-    def test_assignee_can_update_escalate_flag(self):
-        """Test that assignee can update escalate_flag field."""
+    def test_assignee_escalation_requires_a_reason(self):
+        """The committee must explain why it escalates the issue."""
         self.authenticate_with_token(self.assignee_token)
 
-        data = {'escalate_flag': True}
-        response = self.client.patch(self.url, data, format='json')
+        response = self.client.patch(self.url, {'escalate_flag': True}, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['message'], ISSUE_UPDATE_SUCCESS_MESSAGE)
-
-        # Verify the issue escalate_flag was updated
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('escalation_reason', response.data['errors'])
         self.issue.refresh_from_db()
-        self.assertTrue(self.issue.escalate_flag)
+        self.assertFalse(self.issue.escalate_flag)
+
+    def test_assignee_escalation_without_higher_committee_is_refused(self):
+        """No committee above the current one: the escalation is refused instead of hanging."""
+        self.authenticate_with_token(self.assignee_token)
+
+        response = self.client.patch(
+            self.url, {'escalate_flag': True, 'escalation_reason': 'Needs higher level'}, format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('escalate_flag', response.data['errors'])
+        self.issue.refresh_from_db()
+        self.assertFalse(self.issue.escalate_flag)
+        self.assertEqual(self.issue.assignee, self.assignee_user)
 
     def test_assignee_can_update_other_fields_with_status(self):
         """Test that assignee can update status along with other allowed fields."""

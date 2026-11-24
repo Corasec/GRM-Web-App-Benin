@@ -3,6 +3,7 @@ from django.urls import reverse
 from authentication.factories import GovernmentWorkerFactory, UserFactory
 from grm.tests.base import DashboardTestCase
 from issues.factories import AdministrativeRegionFactory, IssueFactory, IssueStatusFactory
+from issues.models import IssueDepartmentAdministrativeLevel
 
 
 class DeEscalateIssueViewTest(DashboardTestCase):
@@ -14,13 +15,18 @@ class DeEscalateIssueViewTest(DashboardTestCase):
         self.region_a = AdministrativeRegionFactory(parent=self.root_region)
         self.region_b = AdministrativeRegionFactory(parent=self.region_a)
 
-        # Issue is at region_a; its current assignee will be a worker at region_a
-        self.issue = IssueFactory(confirmed=True, administrative_region=self.region_a)
-        # Make the current assignee a GovernmentWorker in region_a
+        # The issue happened in region_b and was escalated to the committee of region_a:
+        # de-escalation goes back down towards the issue location.
+        self.issue = IssueFactory(confirmed=True, administrative_region=self.region_b)
+        department = self.issue.category.assigned_department.department
+        # Committees are attached to their level in the wizard
+        for level in {self.region_a.administrative_level, self.region_b.administrative_level}:
+            IssueDepartmentAdministrativeLevel.objects.get_or_create(department=department, administrative_level=level)
+        # Make the current assignee the committee of region_a
         GovernmentWorkerFactory(
             user=self.issue.assignee,
             administrative_region=self.region_a,
-            department=self.issue.category.assigned_department.department,
+            department=department,
         )
 
         self.url = reverse("dashboard:grm:de_escalate_issue", kwargs={"issue": self.issue.id})
@@ -39,14 +45,17 @@ class DeEscalateIssueViewTest(DashboardTestCase):
         assert "msg" in data
         assert data.get("assignee", {}).get("id") == child_worker.id
         assert data.get("access_denied") is False
-        assert data["administrative_level"] == child_worker.governmentworker.administrative_region.administrative_level.name
+        assert (
+            data["administrative_level"]
+            == child_worker.governmentworker.administrative_region.administrative_level.name
+        )
         assert data["department"] == child_worker.governmentworker.department.name
 
         self.issue.refresh_from_db()
         assert self.issue.assignee_id == child_worker.id
 
     def test_post_no_candidate_returns_error_message(self):
-        # No GovernmentWorker in descendants; ensure region_a has no children workers
+        # No committee account in region_b (the issue location below region_a)
         manager = UserFactory(grm_manager=True)
         resp = self.post(self.url, data={}, ajax=True, user=manager)
         assert resp.status_code == 200

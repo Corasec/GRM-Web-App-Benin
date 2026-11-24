@@ -40,7 +40,7 @@ flowchart TB
 
     subgraph workers["Background processing"]
         BEAT["celery-beat<br/>scheduler"]
-        WORK["celery-worker<br/>assignment, escalation, appeals,<br/>notifications, metrics"]
+        WORK["celery-worker<br/>assignment, escalation, appeals,<br/>metrics"]
     end
 
     subgraph ext["External services"]
@@ -207,17 +207,16 @@ The staff working surface is `dashboard/grm` ([urls.py](../src/dashboard/grm/url
 Handled by scheduled jobs in [grm/tasks.py](../src/grm/tasks.py):
 
 - **Automatic backfill and assignment** — `check_issues` sweeps confirmed issues and fills in three things: the **internal code**, the **anonymisation** of citizen data where required, and the **assignee**. Assignment (`Issue.get_assignee`) applies only when the category has a `redirection_protocol`: a village secretary in the issue's region gets it first, and otherwise it goes to the **least-loaded** government worker of the category's department in that region.
-- **Automatic escalation** — a daily job flags issues whose days-in-status exceed `threshold_days_to_escalate`; a job every 5 minutes then reassigns each flagged issue **one administrative level up**, within the same department, climbing until it finds an official or reaches the root.
-- **Manual escalation / de-escalation** — from the dashboard, for GRM Managers and PIU staff. De-escalation exists **only** manually.
+- **Escalation** — along the committees CCGP (village) → CLGP (commune) → national committee, skipping levels without committee. Automatic (a daily job flags cases whose period — since the status or the last escalation — exceeds `threshold_days_to_escalate`; a job every 5 minutes executes the escalations), voluntary from the mobile app (immediate, reason required) or manual from the dashboard. De-escalation is manual only and goes back down towards the case location. All paths go through `issues/escalation.py`.
 - **Appeals** — an hourly job reassigns appealed issues to the head of the category's `assigned_appeal_department`. This is a **jump to a fixed department**, not a climb up the hierarchy.
 
-> Full detail, including the fact that there is **no cap on appeals** and that citizens are **never notified of an escalation**, is in [appeal-escalation-system.md](appeal-escalation-system.md).
+> Full detail, including the fact that there is **no cap on appeals**, is in [appeal-escalation-system.md](appeal-escalation-system.md).
 
 ### 7.3 Notifications
 
 Two layers coexist:
 
-- **Built-in**: `grm/notifications.py` with the types in `grm/constants.py` — `created`, `status_changed`, `appealed`, `assigned`. Delivered by SMS or email depending on the citizen's `contact_method`, drained by `send_sms_message` / `send_mail_message` every 5 minutes.
+- **Built-in**: `grm/notifications.py` with the types in `grm/constants.py` — `created`, `status_changed`, `appealed`, `assigned`, `escalated`. Sent immediately by the action, by SMS or email depending on the citizen's `contact_method`, only to citizens who asked for direct alerts. See [notifications.md](notifications.md).
 - **The `integrations` app**: a fuller, configurable system — `NotificationProvider`, `Integration`, `NotificationTemplate`, `NotificationRule`, `NotificationLog`, `WebhookEndpoint` — with provider adapters for **Twilio**, **Africa's Talking**, **SendGrid**, **Mailchimp** and **Klaviyo**, each bootstrapped by its own `init_*` management command.
 
 ### 7.4 Analytics and AI
@@ -253,14 +252,12 @@ Registered in `setup_periodic_tasks` ([grm/tasks.py](../src/grm/tasks.py)):
 | Job | Frequency | Purpose |
 |---|---|---|
 | `check_issues` | 5 min | Assign newly confirmed issues |
-| `escalate_issues` | 5 min | Execute pending escalations |
-| `send_sms_message` | 5 min | Drain the SMS queue |
-| `send_mail_message` | 5 min | Drain the email queue |
+| `escalate_issues` | 5 min | Execute pending escalations (next committee up) |
 | `mark_issues_to_be_escalated` | daily | Flag issues past their escalation threshold |
 | `reassign_issues_to_appeal` | hourly | Route appealed issues to the appeal department |
 | Performance-metric refresh | 15 min, sharded | Recompute KPI tables per region |
 
-> ⚠️ **Deployment caveat.** The web app runs on **Vercel**, which cannot host long-running processes. `vercel.json` wires up exactly **one** cron — `_cron/check-issues` ([grm/cron_views.py](../src/grm/cron_views.py)). Everything else in the table above runs **only** if the separate Celery worker/beat containers from `docker-compose.celery.yml` are deployed and running. If they are not, automatic escalation, appeal routing, queued notifications and metric refreshes silently do not happen, even though the code is present and correct.
+> ⚠️ **Deployment caveat.** Production runs as Docker containers on a VM (`docker/app/docker-compose.yaml`): the `celery-worker` and `celery-beat` services must be running, otherwise automatic assignment, escalation, appeal routing and metric refreshes silently do not happen. Vercel is only used for demos: it wires a single cron (`_cron/check-issues`, [grm/cron_views.py](../src/grm/cron_views.py)) and runs nothing else from the table above.
 
 ---
 

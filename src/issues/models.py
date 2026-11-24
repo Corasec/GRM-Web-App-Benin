@@ -825,32 +825,54 @@ class Issue(models.Model):
 
         return find_committee_account_upwards(start)
 
-    def get_assignee_to_escalate(self, region):
-        department = self.category.assigned_department.department
-        parent = region.parent
-        worker = GovernmentWorker.objects.filter(department=department, administrative_region=parent).first()
-        if worker:
-            return worker.user
-        elif parent:
-            return self.get_assignee_to_escalate(parent)
-        else:
+    def current_committee_region(self):
+        """
+        Region of the committee currently handling the issue: the assignee's committee region,
+        or the issue region when the assignee is not a committee account (legacy data, GRM manager).
+        """
+        assignee = self.assignee
+        if assignee is not None:
+            try:
+                return assignee.governmentworker.administrative_region
+            except GovernmentWorker.DoesNotExist:
+                pass
+        return self.administrative_region
+
+    def get_assignee_to_escalate(self, region=None):
+        """
+        Next committee up the chain (CCGP village -> CLGP commune -> national committee), skipping
+        the levels without committee (arrondissement, departement). ``None`` at the top.
+        """
+        region = region or self.current_committee_region()
+        if region is None:
+            return None
+        return find_committee_account_upwards(region.parent)
+
+    def get_assignee_to_de_escalate(self, region=None):
+        """
+        Next committee down **towards the issue location** (national -> CLGP of the issue commune
+        -> CCGP of the issue village). ``None`` when the issue is already at its lowest committee.
+        """
+        region = region or self.current_committee_region()
+        if region is None or self.administrative_region is None:
             return None
 
-    def get_assignee_to_de_escalate(self, region):
-        department = self.category.assigned_department.department
-        children = region.children.all()
-        worker = GovernmentWorker.objects.filter(department=department, administrative_region_id__in=children).first()
-        if worker:
-            return worker.user
-        elif children:
-            assignee = None
-            for child in children:
-                assignee = self.get_assignee_to_de_escalate(child)
-                if assignee:
-                    break
-            return assignee
-        else:
+        # Issue location and its ancestors, from the issue region up to the root
+        path = []
+        node = self.administrative_region
+        while node is not None:
+            path.append(node)
+            node = node.parent
+        path_ids = [r.id for r in path]
+        if region.id not in path_ids:
             return None
+
+        # Regions strictly below the current committee, closest first
+        for candidate in reversed(path[: path_ids.index(region.id)]):
+            account = committee_account_at(candidate)
+            if account:
+                return account
+        return None
 
 
 def find_committee_account_upwards(region):
@@ -863,19 +885,28 @@ def find_committee_account_upwards(region):
     département have no department attached and are therefore skipped.
     """
     while region is not None:
-        department_ids = IssueDepartmentAdministrativeLevel.objects.filter(
-            administrative_level_id=region.administrative_level_id
-        ).values("department_id")
-        worker = (
-            GovernmentWorker.objects.filter(department_id__in=department_ids, administrative_region=region)
-            .select_related("user")
-            .order_by("id")
-            .first()
-        )
-        if worker:
-            return worker.user
+        account = committee_account_at(region)
+        if account:
+            return account
         region = region.parent
     return None
+
+
+def committee_account_at(region):
+    """
+    User of the committee account placed on ``region``, or ``None``. Only departments attached
+    to the region level in the wizard count (e.g. CLGP at commune level).
+    """
+    department_ids = IssueDepartmentAdministrativeLevel.objects.filter(
+        administrative_level_id=region.administrative_level_id
+    ).values("department_id")
+    worker = (
+        GovernmentWorker.objects.filter(department_id__in=department_ids, administrative_region=region)
+        .select_related("user")
+        .order_by("id")
+        .first()
+    )
+    return worker.user if worker else None
 
 
 class Comment(models.Model):

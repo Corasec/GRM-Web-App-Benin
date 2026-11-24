@@ -10,7 +10,6 @@ from django.db.models import Q
 from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
 
@@ -41,6 +40,7 @@ from grm.constants import (
 )
 from grm.notifications import send_issue_notification
 from grm.utils import get_issue_select_options_choices
+from issues.escalation import can_be_escalated, de_escalate_issue, escalate_issue
 from issues.models import (
     AdministrativeRegion,
     Citizen,
@@ -52,22 +52,6 @@ from issues.models import (
 
 COUCHDB_GRM_DATABASE = settings.COUCHDB_GRM_DATABASE
 COUCHDB_GRM_ATTACHMENT_DATABASE = settings.COUCHDB_GRM_ATTACHMENT_DATABASE
-
-
-def escalation_anchor_region(issue):
-    """
-    Region used to resolve escalation / de-escalation targets.
-
-    Prefer the assignee's GovernmentWorker region; if the assignee is not a case worker
-    (e.g. GRM owner/manager without a worker profile), fall back to the issue region.
-    """
-    assignee = issue.assignee
-    if assignee is not None:
-        try:
-            return assignee.governmentworker.administrative_region
-        except ObjectDoesNotExist:
-            pass
-    return issue.administrative_region
 
 
 def assignee_worker_admin_context(assignee):
@@ -818,21 +802,13 @@ class IssueEscalateButtonsTemplateView(IssueMixin, LoginRequiredAndAJAXRequestMi
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        region = escalation_anchor_region(self.obj)
-        if region is None:
+        if not can_be_escalated(self.obj):
             context["non_scalable"] = True
             context["non_descalable"] = True
             return context
 
-        assignee_to_escalate = self.obj.get_assignee_to_escalate(region)
-        assignee_to_de_escalate = self.obj.get_assignee_to_de_escalate(region)
-        context["non_scalable"] = not assignee_to_escalate
-        context["non_descalable"] = not assignee_to_de_escalate
-
-        if self.obj.status.final_status:
-            context["non_scalable"] = True
-            context["non_descalable"] = True
-
+        context["non_scalable"] = not self.obj.get_assignee_to_escalate()
+        context["non_descalable"] = not self.obj.get_assignee_to_de_escalate()
         return context
 
 
@@ -1086,8 +1062,8 @@ class EscalateIssueView(IssueMixin, LoginRequiredAndAJAXRequestMixin, generic.Vi
     """
 
     def post(self, request, *args, **kwargs):
-        if self.obj.status.final_status:
-            msg = _("This issue is resolved; it cannot be escalated.")
+        if not can_be_escalated(self.obj):
+            msg = _("This issue is closed; it cannot be escalated.")
             messages.add_message(self.request, messages.ERROR, msg, extra_tags="danger")
             context = {
                 "msg": render(self.request, "common/messages.html").content.decode("utf-8"),
@@ -1097,14 +1073,9 @@ class EscalateIssueView(IssueMixin, LoginRequiredAndAJAXRequestMixin, generic.Vi
             }
             return JsonResponse(context, safe=False)
 
-        region = escalation_anchor_region(self.obj)
-        assignee = self.obj.get_assignee_to_escalate(region) if region is not None else None
+        assignee = escalate_issue(self.obj, user=request.user)
 
         if assignee:
-            self.obj.assignee = assignee
-            self.obj.escalate_flag = False
-            self.obj.escalated_date = timezone.now()
-            self.obj.save()
             msg = _("The issue was successfully escalated.")
             messages.add_message(self.request, messages.SUCCESS, msg, extra_tags="success")
         else:
@@ -1127,8 +1098,8 @@ class DeEscalateIssueView(IssueMixin, LoginRequiredAndAJAXRequestMixin, generic.
     """
 
     def post(self, request, *args, **kwargs):
-        if self.obj.status.final_status:
-            msg = _("This issue is resolved; it cannot be de-escalated.")
+        if not can_be_escalated(self.obj):
+            msg = _("This issue is closed; it cannot be de-escalated.")
             messages.add_message(self.request, messages.ERROR, msg, extra_tags="danger")
             context = {
                 "msg": render(self.request, "common/messages.html").content.decode("utf-8"),
@@ -1138,12 +1109,9 @@ class DeEscalateIssueView(IssueMixin, LoginRequiredAndAJAXRequestMixin, generic.
             }
             return JsonResponse(context, safe=False)
 
-        region = escalation_anchor_region(self.obj)
-        assignee = self.obj.get_assignee_to_de_escalate(region) if region is not None else None
+        assignee = de_escalate_issue(self.obj, user=request.user)
 
         if assignee:
-            self.obj.assignee = assignee
-            self.obj.save()
             msg = _("The issue was successfully de-escalated.")
             messages.add_message(self.request, messages.SUCCESS, msg, extra_tags="success")
         else:

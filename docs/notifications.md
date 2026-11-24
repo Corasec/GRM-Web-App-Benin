@@ -24,7 +24,7 @@ For citizens who asked for direct alerts, a message is sent **immediately by the
 | Status changed (accepted, rejected, resolved) | mobile API, dashboard actions | `status_changed` (includes the resolution or the reject reason) |
 | Complaint assigned by hand | dashboard | `assigned` |
 | Appeal raised | mobile API | `appealed` (includes the appeal reason) |
-| Complaint escalated to the next committee | *planned with backlog item 7* | `escalated` |
+| Complaint escalated to the next committee | automatic escalation, mobile app, dashboard | `escalated` |
 
 A failed send is logged and **never blocks the action** (the complaint is still saved).
 

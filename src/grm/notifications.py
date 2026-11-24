@@ -159,6 +159,7 @@ def _generate_email_subject(issue, notification_type):
         'status_changed': _("Issue Status Updated - Tracking Code: {tracking_code}"),
         'appealed': _("Issue Appealed - Tracking Code: {tracking_code}"),
         'assigned': _("Issue Assigned - Tracking Code: {tracking_code}"),
+        'escalated': _("Issue Escalated - Tracking Code: {tracking_code}"),
     }
 
     subject_template = subjects.get(notification_type, _("Issue Notification - Tracking Code: {tracking_code}"))
@@ -214,6 +215,13 @@ def _generate_default_message(issue, notification_type):
             "Status: {status}\n\n"
             "We are working on resolving your issue."
         ),
+        'escalated': _(
+            "Dear citizen,\n\n"
+            "Your issue has been forwarded to the committee of the next level for processing.\n"
+            "Tracking Code: {tracking_code}\n"
+            "Status: {status}\n\n"
+            "Thank you for your patience."
+        ),
     }
 
     message_template = messages.get(
@@ -252,6 +260,7 @@ def _generate_sms_message(issue, notification_type):
         'status_changed': _("GRM - Complaint {tracking_code}: new status \"{status}\"."),
         'appealed': _("GRM - Complaint {tracking_code}: your appeal has been registered."),
         'assigned': _("GRM - Complaint {tracking_code}: taken in charge by the committee."),
+        'escalated': _("GRM - Complaint {tracking_code}: forwarded to the committee of the next level."),
     }
     message = messages.get(notification_type, _("GRM - Complaint {tracking_code} updated.")).format(
         tracking_code=issue.tracking_code, status=status

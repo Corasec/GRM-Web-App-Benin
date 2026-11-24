@@ -2964,3 +2964,65 @@ msgstr "En cours"
 #: grm/notifications.py
 msgid "Processed"
 msgstr "Traite"
+
+#: issues/escalation.py grm/notifications.py
+msgid "Issue Escalated - Tracking Code: {tracking_code}"
+msgstr "Plainte transmise au niveau supérieur - Code de suivi : {tracking_code}"
+
+#: issues/escalation.py grm/notifications.py
+msgid "GRM - Complaint {tracking_code}: forwarded to the committee of the next level."
+msgstr "MGP - Plainte {tracking_code} : transmise au comite du niveau superieur."
+
+#: issues/escalation.py grm/notifications.py
+msgid "The complaint has been escalated automatically to %(committee)s because the processing time has passed."
+msgstr "La plainte a été remontée automatiquement à %(committee)s car le délai de traitement est dépassé."
+
+#: issues/escalation.py grm/notifications.py
+msgid "The complaint has been escalated to %(committee)s. Reason: %(reason)s"
+msgstr "La plainte a été remontée à %(committee)s. Motif : %(reason)s"
+
+#: issues/escalation.py grm/notifications.py
+msgid "The complaint has been escalated to %(committee)s."
+msgstr "La plainte a été remontée à %(committee)s."
+
+#: issues/escalation.py grm/notifications.py
+msgid "The complaint has been sent back to %(committee)s."
+msgstr "La plainte a été redescendue à %(committee)s."
+
+#: grm/notifications.py
+msgid ""
+"Dear citizen,\n"
+"\n"
+"Your issue has been forwarded to the committee of the next level for processing.\n"
+"Tracking Code: {tracking_code}\n"
+"Status: {status}\n"
+"\n"
+"Thank you for your patience."
+msgstr ""
+"Cher citoyen,\n"
+"\n"
+"Votre plainte a été transmise au comité du niveau supérieur pour traitement.\n"
+"Code de suivi : {tracking_code}\n"
+"Statut : {status}\n"
+"\n"
+"Merci de votre patience."
+
+#: issues/serializers.py dashboard/grm/views.py
+msgid "A reason is required to escalate the issue."
+msgstr "Un motif est obligatoire pour remonter la plainte."
+
+#: issues/serializers.py dashboard/grm/views.py
+msgid "A resolved or rejected issue cannot be escalated."
+msgstr "Une plainte résolue ou rejetée ne peut pas être remontée."
+
+#: issues/serializers.py dashboard/grm/views.py
+msgid "There is no higher committee to escalate this issue to."
+msgstr "Il n'y a pas de comité de niveau supérieur vers lequel remonter cette plainte."
+
+#: issues/serializers.py dashboard/grm/views.py
+msgid "This issue is closed; it cannot be escalated."
+msgstr "Cette plainte est clôturée ; elle ne peut pas être remontée."
+
+#: issues/serializers.py dashboard/grm/views.py
+msgid "This issue is closed; it cannot be de-escalated."
+msgstr "Cette plainte est clôturée ; elle ne peut pas être redescendue."
