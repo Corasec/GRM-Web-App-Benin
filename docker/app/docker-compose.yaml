@@ -1,110 +1,97 @@
+# GRM / eMGP production stack — see DEPLOY.md at the repository root.
+#
+#   cp .env.example .env    # then fill it
+#   docker compose pull && docker compose up -d
+#
+# HTTPS is terminated before this server (domain provider): nginx listens on HTTP only.
+name: grm
+
+x-app: &app
+  image: ${GRM_IMAGE:-cosobenin/grm-app:latest}
+  restart: always
+  env_file: .env
+  volumes:
+    # Attachments and photos: must survive image updates
+    - media:/usr/appserver/media
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_started
+
+# Start order: db (healthy) + redis -> django-app (migrations + collectstatic, then gunicorn: healthy)
+#              -> celery-worker, celery-beat, nginx. Celery needs the migrated database (beat reads its
+#              schedules from a migrated table), nginx needs gunicorn and the collected static files.
+x-after-migrations: &after-migrations
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_started
+    django-app:
+      condition: service_healthy
+
 services:
   django-app:
-    image: cosobenin/grm-app:v.1.0.0
-    restart: always
-    ports:
-      - '9000:9000'
-    network_mode: "host"
-    environment:
-      SECRET_KEY: '${SECRET_KEY}'
-      ALLOWED_HOSTS: '${ALLOWED_HOSTS}'
-      DATABASE_URL: '${DATABASE_URL}'
-      COUCHDB_URL: '${COUCHDB_URL}'
-      COUCHDB_USERNAME: '${COUCHDB_USERNAME}'
-      COUCHDB_PASSWORD: '${COUCHDB_PASSWORD}'
-      COUCHDB_DATABASE: '${COUCHDB_DATABASE}'
-      COUCHDB_ATTACHMENT_DATABASE: '${COUCHDB_ATTACHMENT_DATABASE}'
-      COUCHDB_GRM_DATABASE: '${COUCHDB_GRM_DATABASE}'
-      COUCHDB_GRM_ATTACHMENT_DATABASE: '${COUCHDB_GRM_ATTACHMENT_DATABASE}'
-      S3_BUCKET: '${S3_BUCKET}'
-      S3_ACCESS: '${S3_ACCESS}'
-      S3_SECRET: '${S3_SECRET}'
-      KOBO_TOKEN: '${KOBO_TOKEN}'
-      CELERY_BROKER_URL: 'redis://redis:6379/0' 
-      CELERY_RESULT_BACKEND: 'redis://redis:6379/0'
-      MAPBOX_ACCESS_TOKEN: '${MAPBOX_ACCESS_TOKEN}'
-      DIAGNOSTIC_MAP_LATITUDE: '${DIAGNOSTIC_MAP_LATITUDE}'
-      DIAGNOSTIC_MAP_LONGITUDE: '${DIAGNOSTIC_MAP_LONGITUDE}'
-      DIAGNOSTIC_MAP_ZOOM: '${DIAGNOSTIC_MAP_ZOOM}'
-      DIAGNOSTIC_MAP_WS_BOUND: '${DIAGNOSTIC_MAP_WS_BOUND}'
-      DIAGNOSTIC_MAP_EN_BOUND: '${DIAGNOSTIC_MAP_EN_BOUND}'
-      DIAGNOSTIC_MAP_ISO_CODE: '${DIAGNOSTIC_MAP_ISO_CODE}'
-      TWILIO_ACCOUNT_SID: '${TWILIO_ACCOUNT_SID}'
-      TWILIO_AUTH_TOKEN: '${TWILIO_AUTH_TOKEN}'
-      TWILIO_FROM_NUMBER: '${TWILIO_FROM_NUMBER}'
-      COUNTRY_CALLING_CODE: '${COUNTRY_CALLING_CODE}'
-      EMAIL_HOST: '${EMAIL_HOST}'
-      EMAIL_USE_TLS: '${EMAIL_USE_TLS}'
-      EMAIL_PORT: '${EMAIL_PORT}'
-      EMAIL_HOST_USER: '${EMAIL_HOST_USER}'
-      EMAIL_HOST_PASSWORD: '${EMAIL_HOST_PASSWORD}'
+    <<: *app
+    # At each start: migrate + collectstatic, then gunicorn on :9000 (see src/run.sh "serve")
+    command: ["serve"]
     volumes:
-      - static-content:/usr/appserver/static
-    depends_on:
-      - db
-      - redis
+      - media:/usr/appserver/media
+      - static:/usr/appserver/staticfiles
+    expose:
+      - "9000"
+    healthcheck:
+      # gunicorn only listens once migrations and collectstatic are done
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 9000), 3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
 
-  db:
-    image: postgres:17.0
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    ports:
-      - '5432:5432'
-
-  nginx:
-    image: nginx:alpine
-    restart: always
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-    ports:
-      - '80:80'
-      - '443:443'
-    network_mode: "host"
-    volumes:
-      - ./data/nginx:/etc/nginx/conf.d
-      - static-content:/var/www/app/static
-    depends_on:
-      - django-app
-
-  redis:
-    image: redis:alpine
-    restart: always
-    network_mode: "host"
-    ports:
-      - '6379:6379'
-
+  # Automatic assignment, escalation, appeals, metrics (scheduled by celery-beat)
   celery-worker:
-    image: cosobenin/grm-app:v.1.0.0
-    restart: always
-    command: celery -A grm worker -l info
-    environment:
-      CELERY_BROKER_URL: 'redis://redis:6379/0'
-      CELERY_RESULT_BACKEND: 'redis://redis:6379/1'
-    depends_on:
-      - django-app
-      - db
-      - redis
-    volumes:
-      - static-content:/usr/appserver/static
+    <<: [*after-migrations, *app]  # first wins: keep the "after migrations" dependencies
+    command: ["celery-worker"]
 
   celery-beat:
-    image: cosobenin/grm-app:v.1.0.0
+    <<: [*after-migrations, *app]  # first wins: keep the "after migrations" dependencies
+    command: ["celery-beat"]
+
+  db:
+    image: postgres:17
     restart: always
-    command: celery -A grm beat -l info
     environment:
-      CELERY_BROKER_URL: 'redis://redis:6379/0'
-      CELERY_RESULT_BACKEND: 'redis://redis:6379/1'
-    depends_on:
-      - django-app
-      - db
-      - redis
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - static-content:/usr/appserver/static
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    # not published: only reachable from the other containers
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: always
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - static:/var/www/static:ro
+      - media:/var/www/media:ro
+    depends_on:
+      django-app:
+        condition: service_healthy
 
 volumes:
-  static-content:
   pg_data:
+  static:
+  media:

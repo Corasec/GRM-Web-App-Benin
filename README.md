@@ -30,10 +30,14 @@ packages (pytest, factory-boy, Faker, black, pre-commit, pip-audit, debug toolba
 
 Start Application
 
-- Create a local environment file (customize according to your needs) from the provided template: `cp grm/example.env grm/.env`. For example fill database credentials. The `COUCHDB_*` variables must be defined (placeholders are enough): CouchDB is deprecated and only needed to import data from a legacy deployment.
+- Create a local environment file (customize according to your needs) from the provided template: `cp grm/example.env grm/.env`. For example fill database credentials. Only `SECRET_KEY` and `DATABASE_URL` are required; CouchDB is deprecated and only needed to import data from a legacy deployment.
 - Do the same for `local_settings.py`: `cp grm/local_settings_template.py grm/local_settings.py` and update if needed.
 - `python manage.py migrate`
 - `python manage.py runserver`
+
+## Production deployment
+
+Production runs with Docker on a VM (Django, Celery worker and beat, PostgreSQL, Redis, nginx): see **[DEPLOY.md](DEPLOY.md)** for the exact files to copy, the commands to run and the first start (administrator, setup wizard, Excel imports).
 
 ## Configuration (for other country usage)
 

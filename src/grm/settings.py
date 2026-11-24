@@ -211,22 +211,22 @@ LOGIN_REDIRECT_URL = "dashboard:diagnostics:home"
 LOGOUT_REDIRECT_URL = "/"
 
 # CouchDB
-COUCHDB_DATABASE = env("COUCHDB_DATABASE")
+COUCHDB_DATABASE = env("COUCHDB_DATABASE", default="administrative_levels")
 
-COUCHDB_ATTACHMENT_DATABASE = env("COUCHDB_ATTACHMENT_DATABASE")
+COUCHDB_ATTACHMENT_DATABASE = env("COUCHDB_ATTACHMENT_DATABASE", default="adb")
 
-COUCHDB_GRM_DATABASE = env("COUCHDB_GRM_DATABASE")
+COUCHDB_GRM_DATABASE = env("COUCHDB_GRM_DATABASE", default="grm")
 
-COUCHDB_GRM_ATTACHMENT_DATABASE = env("COUCHDB_GRM_ATTACHMENT_DATABASE")
+COUCHDB_GRM_ATTACHMENT_DATABASE = env("COUCHDB_GRM_ATTACHMENT_DATABASE", default="grmadb")
 
-COUCHDB_URL = env("COUCHDB_URL")
+COUCHDB_URL = env("COUCHDB_URL", default="")
 
-COUCHDB_USERNAME = env("COUCHDB_USERNAME")
+COUCHDB_USERNAME = env("COUCHDB_USERNAME", default="")
 
-COUCHDB_PASSWORD = env("COUCHDB_PASSWORD")
+COUCHDB_PASSWORD = env("COUCHDB_PASSWORD", default="")
 
 # Celery settings
-CELERY_BROKER_URL = env("CELERY_BROKER_URL")
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://redis:6379/0")
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
@@ -239,56 +239,56 @@ CELERY_ACCEPT_CONTENT = ["json"]
 
 # CELERY_RESULT_BACKEND = "django-db"
 
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://redis:6379/0")
 
 CELERY_TASK_SERIALIZER = "json"
 
 # Mapbox
-MAPBOX_ACCESS_TOKEN = env("MAPBOX_ACCESS_TOKEN")
+MAPBOX_ACCESS_TOKEN = env("MAPBOX_ACCESS_TOKEN", default="")
 
-DIAGNOSTIC_MAP_LATITUDE = env("DIAGNOSTIC_MAP_LATITUDE")
+DIAGNOSTIC_MAP_LATITUDE = env("DIAGNOSTIC_MAP_LATITUDE", default="9.3077")
 
-DIAGNOSTIC_MAP_LONGITUDE = env("DIAGNOSTIC_MAP_LONGITUDE")
+DIAGNOSTIC_MAP_LONGITUDE = env("DIAGNOSTIC_MAP_LONGITUDE", default="2.3158")
 
-DIAGNOSTIC_MAP_ZOOM = env("DIAGNOSTIC_MAP_ZOOM")
+DIAGNOSTIC_MAP_ZOOM = env("DIAGNOSTIC_MAP_ZOOM", default="6.5")
 
-DIAGNOSTIC_MAP_WS_BOUND = env("DIAGNOSTIC_MAP_WS_BOUND")
+DIAGNOSTIC_MAP_WS_BOUND = env("DIAGNOSTIC_MAP_WS_BOUND", default="[0.77, 6.14]")
 
-DIAGNOSTIC_MAP_EN_BOUND = env("DIAGNOSTIC_MAP_EN_BOUND")
+DIAGNOSTIC_MAP_EN_BOUND = env("DIAGNOSTIC_MAP_EN_BOUND", default="[3.85, 12.42]")
 
-DIAGNOSTIC_MAP_ISO_CODE = env("DIAGNOSTIC_MAP_ISO_CODE")
+DIAGNOSTIC_MAP_ISO_CODE = env("DIAGNOSTIC_MAP_ISO_CODE", default="BEN")
 
 # Twilio
 # https://www.twilio.com/docs
-TWILIO_ACCOUNT_SID = env("TWILIO_ACCOUNT_SID")
+TWILIO_ACCOUNT_SID = env("TWILIO_ACCOUNT_SID", default="")
 
-TWILIO_AUTH_TOKEN = env("TWILIO_AUTH_TOKEN")
+TWILIO_AUTH_TOKEN = env("TWILIO_AUTH_TOKEN", default="")
 
-TWILIO_FROM_NUMBER = env("TWILIO_FROM_NUMBER")
+TWILIO_FROM_NUMBER = env("TWILIO_FROM_NUMBER", default="")
 
-COUNTRY_CALLING_CODE = env("COUNTRY_CALLING_CODE")
+COUNTRY_CALLING_CODE = env("COUNTRY_CALLING_CODE", default="229")
 
 # Mail
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_HOST = env("EMAIL_HOST")
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")
 
-EMAIL_USE_TLS = env("EMAIL_USE_TLS")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
-EMAIL_PORT = env("EMAIL_PORT")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
 
-EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 
 # OpenAi
-OPENAI_API_KEY = env('OPENAI_API_KEY')
+OPENAI_API_KEY = env('OPENAI_API_KEY', default='')
 
-OPENAI_MODEL = env('OPENAI_MODEL')
+OPENAI_MODEL = env('OPENAI_MODEL', default='gpt-4o-mini')
 
-OPENAI_TEMPERATURE = float(env('OPENAI_TEMPERATURE'))
+OPENAI_TEMPERATURE = env.float('OPENAI_TEMPERATURE', default=0.3)
 
-OPENAI_MAX_TOKENS = int(env('OPENAI_MAX_TOKENS'))
+OPENAI_MAX_TOKENS = env.int('OPENAI_MAX_TOKENS', default=800)
 
 # Django REST Framework
 REST_FRAMEWORK = {
@@ -371,6 +371,20 @@ except ImportError:
 
     # Must not write to stdout: Vercel's Django builder parses manage.py stdout as JSON.
     print("No local_settings.py, using .local_settings_template", file=sys.stderr)
+
+# --- Production overrides from the environment (Docker / VM deployment, see DEPLOY.md) ------------
+# The image ships without local_settings.py, so the template above is loaded: the environment wins.
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=ALLOWED_HOSTS)
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=globals().get("CSRF_TRUSTED_ORIGINS", []))
+# SMS are only printed to the logs while TWILIO_DEBUG_MODE is on (no SMS provider budgeted yet)
+TWILIO_DEBUG_MODE = env.bool("TWILIO_DEBUG_MODE", default=globals().get("TWILIO_DEBUG_MODE", False))
+
+# HTTPS is terminated before nginx (domain provider): trust its X-Forwarded-Proto header
+if env.bool("BEHIND_HTTPS_PROXY", default=False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=0)
 
 INSTALLED_APPS += LOCAL_INSTALLED_APPS
 
