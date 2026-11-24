@@ -438,3 +438,16 @@ class IssueCreateAPIViewTest(APITestCase):
         issue = Issue.objects.select_related("citizen").get()
         self.assertEqual(issue.contact_information, "*")
         self.assertEqual(issue.citizen.name, "*")
+
+    def test_duplicate_tracking_code_is_refused(self):
+        """The tracking code identifies the complaint for the complainant: it must be unique."""
+        self.client.force_authenticate(user=self.reporter_user)
+        data = self.__get_valid_data()
+        first = self.client.post(self.url, data=data, format="json")
+
+        second = self.client.post(self.url, data=self.__get_valid_data(), format="json")
+
+        self.assertEqual(first.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(second.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("tracking_code", second.data["errors"])
+        self.assertEqual(Issue.objects.count(), 1)
