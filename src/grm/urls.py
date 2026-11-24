@@ -64,9 +64,6 @@ if settings.DEBUG:
         ),
     ]
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    # Only include debug_toolbar if it's installed (dev dependency)
-    try:
-        import debug_toolbar
+    # Only include debug_toolbar when it is enabled (dev dependency, see local_settings.py)
+    if "debug_toolbar" in settings.INSTALLED_APPS:
         urlpatterns += [path("__debug__/", include("debug_toolbar.urls"))]
-    except ImportError:
-        pass

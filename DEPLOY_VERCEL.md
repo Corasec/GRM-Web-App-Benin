@@ -12,6 +12,8 @@ Vercel runs Django as a single serverless function. Celery workers and beat are 
    - `CELERY_BROKER_URL` — e.g. `rediss://default:TOKEN@HOST:6379`
    - `CELERY_RESULT_BACKEND` — same URL with a different logical DB if your provider supports it, or the same URL.
 
+**Python version:** the project targets Python 3.12 (Django 5.2 LTS). Vercel reads it from `src/.python-version`; the Celery containers use the same version through `src/Dockerfile` (`python:3.12-slim-bookworm`). Only `requirements.txt` (production dependencies) is installed; `requirements.dev.txt` is for local development and tests.
+
 Every deploy runs `migrate` then `set_benin_demo`. The demo command only seeds when the database is still empty; existing data is left unchanged.
 
 **Bundle size:** `sentence-transformers` was removed from `requirements.txt` because it pulls PyTorch and exceeds Vercel’s ~500 MB function limit. Embeddings use the Hugging Face Inference API (`HUGGINGFACE_*` settings), not local models.

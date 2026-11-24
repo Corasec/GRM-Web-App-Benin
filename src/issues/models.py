@@ -302,7 +302,7 @@ class IssueStatus(models.Model):
         ordering = ['id']
         constraints = [
             models.CheckConstraint(
-                check=models.Q(threshold_days__gt=0),
+                condition=models.Q(threshold_days__gt=0),
                 name="%(app_label)s_%(class)s_threshold_days_gt_0",
                 violation_error_message=_("Threshold must be greater than zero."),
             )

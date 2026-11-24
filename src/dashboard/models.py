@@ -1,4 +1,5 @@
 from datetime import timedelta
+from datetime import timezone as dt_timezone
 
 from django.core.cache import cache
 from django.db import models
@@ -147,7 +148,7 @@ class PerformanceMetrics(models.Model):
         else:
             # If a naive datetime was passed, assume UTC (adjust if you prefer another default)
             if timezone.is_naive(calculated_at):
-                calculated_at = timezone.make_aware(calculated_at, timezone=timezone.utc)
+                calculated_at = timezone.make_aware(calculated_at, timezone=dt_timezone.utc)
 
         # Use calculated_at as the reference "now" for start/end computation
         end_date = calculated_at

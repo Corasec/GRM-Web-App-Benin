@@ -1,3 +1,5 @@
+from datetime import timezone as dt_timezone
+
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import MethodNotAllowed
@@ -159,9 +161,9 @@ class IssueSerializer(serializers.ModelSerializer):
             return None
         # Ensure UTC ISO8601 with Z suffix regardless of current timezone settings
         if timezone.is_naive(dt):
-            dt = timezone.make_aware(dt, timezone=timezone.utc)
+            dt = timezone.make_aware(dt, timezone=dt_timezone.utc)
         else:
-            dt = dt.astimezone(timezone.utc)
+            dt = dt.astimezone(dt_timezone.utc)
         return dt.isoformat().replace('+00:00', 'Z')
 
     class Meta:

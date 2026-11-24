@@ -17,13 +17,14 @@ from grm.constants import (
     ATTACHMENT_CREATE_SUCCESS_MESSAGE,
     NOT_FOUND_MESSAGE,
 )
+from grm.test_storage import IN_MEMORY_STORAGES
 from grm.utils import reset_sequences
 from issues.factories import IssueFactory
 from issues.models import IssueAttachment
 
 
 @pytest.mark.django_db
-@override_settings(DEFAULT_FILE_STORAGE='grm.test_storage.InMemoryStorage', LANGUAGE_CODE='en-us')
+@override_settings(STORAGES=IN_MEMORY_STORAGES, LANGUAGE_CODE='en-us')
 class IssueAttachmentCreateAPIViewTest(APITestCase):
     """Integration tests for the IssueAttachmentCreateAPIView."""
 
