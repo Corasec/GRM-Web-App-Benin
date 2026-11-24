@@ -1,7 +1,20 @@
-Werkzeug<2.2
-django-query-inspector<1.2
-django-queryinspect
-django_debug_toolbar<3.6
-django-extensions
-pip-audit
-black
+# Development and test dependencies.
+# Install with: pip install -r requirements.txt -r requirements.dev.txt
+-r requirements.txt
+
+# Tests
+pytest==9.2.0
+pytest-django==4.14.0
+factory-boy==3.3.3
+Faker==40.63.0
+
+# Code quality
+black==26.10.1
+pre-commit==4.7.0
+virtualenv==21.15.13  # pulled by pre-commit; older versions have known vulnerabilities
+pip-audit==2.10.1
+
+# Debugging tools (optional, enabled through local_settings.py)
+django-debug-toolbar==8.0.0
+django-extensions==4.1
+django-query-inspector==1.3.0

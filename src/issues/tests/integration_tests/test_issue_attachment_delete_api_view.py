@@ -10,13 +10,14 @@ from rest_framework.test import APITestCase
 
 from authentication.factories import UserFactory
 from grm.constants import ATTACHMENT_CREATE_ERROR_MESSAGE, NOT_FOUND_MESSAGE
+from grm.test_storage import FILE_SYSTEM_STORAGES, IN_MEMORY_STORAGES
 from grm.utils import reset_sequences
 from issues.factories import IssueAttachmentFactory, IssueFactory
 from issues.models import IssueAttachment
 
 
 @pytest.mark.django_db
-@override_settings(DEFAULT_FILE_STORAGE='grm.test_storage.InMemoryStorage', LANGUAGE_CODE='en-us')
+@override_settings(STORAGES=IN_MEMORY_STORAGES, LANGUAGE_CODE='en-us')
 class IssueAttachmentDeleteAPIViewTest(APITestCase):
     """Integration tests for the IssueAttachmentDeleteAPIView."""
 
@@ -90,7 +91,7 @@ class IssueAttachmentDeleteAPIViewTest(APITestCase):
         """Deleting attachment removes the file from storage."""
         self.authenticate(self.reporter_token)
 
-        with override_settings(DEFAULT_FILE_STORAGE='django.core.files.storage.FileSystemStorage'):
+        with override_settings(STORAGES=FILE_SYSTEM_STORAGES):
             attachment = IssueAttachmentFactory(issue=self.issue, uploaded_by=self.reporter_user)
             url = reverse("issues:delete-issue-attachment", kwargs={"id": attachment.id})
 

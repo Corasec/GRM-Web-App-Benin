@@ -1,4 +1,5 @@
 import json
+from datetime import timezone as dt_timezone
 
 from django.contrib import messages
 from django.db.models import (
@@ -17,6 +18,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import generic
 
 from authentication.models import Facilitator, GovernmentWorker, User
+from common.utils.openai_connector import AIGRMDiagnosticsAnalyzer
 from dashboard.constants import (
     COLOR_DANGER,
     COLOR_PRIMARY,
@@ -51,8 +53,6 @@ from dashboard.user_management.constants import (
     FACILITATOR_DISPLAY,
 )
 from issues.models import AdministrativeRegion, Issue, IssueCategory, IssueStatus
-
-from common.utils.openai_connector import AIGRMDiagnosticsAnalyzer
 
 
 class PerformanceDiagnosticsView(PageMixin, UserManagementPermissionMixin, generic.TemplateView):
@@ -503,7 +503,7 @@ class InactiveUsersAPIView(UserManagementAndAJAXMixin, DataTableMixin, generic.V
                 key=lambda u: (
                     u.last_activity
                     if u.last_activity is not None
-                    else timezone.datetime.min.replace(tzinfo=timezone.utc)
+                    else timezone.datetime.min.replace(tzinfo=dt_timezone.utc)
                 ),
                 reverse=(sort_dir == 'desc'),
             )
@@ -800,11 +800,13 @@ class TableAIInsightAPIView(UserManagementAndAJAXMixin, generic.View):
                     status=500,
                 )
 
-            return JsonResponse({
-                'success': True,
-                'insight': insight,
-                'table_type': table_type,
-            })
+            return JsonResponse(
+                {
+                    'success': True,
+                    'insight': insight,
+                    'table_type': table_type,
+                }
+            )
 
         except Exception as e:
             return JsonResponse(
@@ -817,9 +819,7 @@ class TableAIInsightAPIView(UserManagementAndAJAXMixin, generic.View):
         from dashboard.constants import NOT_APPLICABLE, STATUS_AT_RISK, STATUS_CRITICAL, STATUS_GOOD
 
         # Use same logic as StatusBottleneckMetricsAPIView to get data
-        base_metrics_qs = StatusBottleneckMetrics.objects.filter(
-            period=period
-        ).order_by('-calculated_at')
+        base_metrics_qs = StatusBottleneckMetrics.objects.filter(period=period).order_by('-calculated_at')
 
         if region is None:
             base_metrics_qs = base_metrics_qs.filter(administrative_region__isnull=True)
@@ -859,13 +859,15 @@ class TableAIInsightAPIView(UserManagementAndAJAXMixin, generic.View):
                 avg_days = None
                 performance = 'n/a'
 
-            bottleneck_data.append({
-                'status_name': status.name,
-                'issues_count': issues_count,
-                'avg_days': avg_days,
-                'performance': performance,
-                'is_terminal': is_terminal,
-            })
+            bottleneck_data.append(
+                {
+                    'status_name': status.name,
+                    'issues_count': issues_count,
+                    'avg_days': avg_days,
+                    'performance': performance,
+                    'is_terminal': is_terminal,
+                }
+            )
 
         return analyzer.analyze_status_bottlenecks(bottleneck_data, filters)
 
@@ -898,15 +900,17 @@ class TableAIInsightAPIView(UserManagementAndAJAXMixin, generic.View):
         region_data = []
         for metric in qs[:20]:  # Limit to 20 regions for prompt size
             perf_status = metric.get_performance_status()
-            region_data.append({
-                'region_name': metric.region.name,
-                'open_issues_count': metric.open_issues_count,
-                'avg_resolution_days': metric.avg_resolution_days,
-                'active_workers_count': metric.active_workers_count,
-                'total_workers': metric.total_workers_in_region,
-                'workers_percentage': metric.get_active_workers_percentage(),
-                'performance_status': perf_status.get('status') if isinstance(perf_status, dict) else perf_status,
-            })
+            region_data.append(
+                {
+                    'region_name': metric.region.name,
+                    'open_issues_count': metric.open_issues_count,
+                    'avg_resolution_days': metric.avg_resolution_days,
+                    'active_workers_count': metric.active_workers_count,
+                    'total_workers': metric.total_workers_in_region,
+                    'workers_percentage': metric.get_active_workers_percentage(),
+                    'performance_status': perf_status.get('status') if isinstance(perf_status, dict) else perf_status,
+                }
+            )
 
         return analyzer.analyze_region_performance(region_data, filters)
 
@@ -921,24 +925,27 @@ class TableAIInsightAPIView(UserManagementAndAJAXMixin, generic.View):
         fac_ids = set(Facilitator.objects.values_list('user_id', flat=True))
         all_ids = list(gw_ids | fac_ids)
 
-        users_qs = User.objects.filter(id__in=all_ids).filter(
-            Q(last_activity__lt=cutoff) | Q(last_activity__isnull=True)
-        ).select_related('governmentworker', 'facilitator').annotate(
-            open_issues_count=Count(
-                'assigned_issues',
-                filter=Q(assigned_issues__status__open_status=True, assigned_issues__confirmed=True),
+        users_qs = (
+            User.objects.filter(id__in=all_ids)
+            .filter(Q(last_activity__lt=cutoff) | Q(last_activity__isnull=True))
+            .select_related('governmentworker', 'facilitator')
+            .annotate(
+                open_issues_count=Count(
+                    'assigned_issues',
+                    filter=Q(assigned_issues__status__open_status=True, assigned_issues__confirmed=True),
+                )
             )
         )
 
         # Apply region filter
         if region:
             descendant_ids = region.get_descendant_ids(include_self=True)
-            gw_in_region = GovernmentWorker.objects.filter(
-                administrative_region_id__in=descendant_ids
-            ).values_list('user_id', flat=True)
-            fac_in_region = Facilitator.objects.filter(
-                administrative_region_id__in=descendant_ids
-            ).values_list('user_id', flat=True)
+            gw_in_region = GovernmentWorker.objects.filter(administrative_region_id__in=descendant_ids).values_list(
+                'user_id', flat=True
+            )
+            fac_in_region = Facilitator.objects.filter(administrative_region_id__in=descendant_ids).values_list(
+                'user_id', flat=True
+            )
             users_qs = users_qs.filter(id__in=list(set(list(gw_in_region) + list(fac_in_region))))
 
         # Apply role filter
@@ -964,12 +971,14 @@ class TableAIInsightAPIView(UserManagementAndAJAXMixin, generic.View):
             else:
                 days_inactive = None
 
-            users_data.append({
-                'name': user.name,
-                'role': role,
-                'last_activity_days': days_inactive,
-                'open_issues_count': getattr(user, 'open_issues_count', 0),
-            })
+            users_data.append(
+                {
+                    'name': user.name,
+                    'role': role,
+                    'last_activity_days': days_inactive,
+                    'open_issues_count': getattr(user, 'open_issues_count', 0),
+                }
+            )
 
         return analyzer.analyze_inactive_users(users_data, filters)
 

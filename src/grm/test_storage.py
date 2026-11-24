@@ -14,3 +14,12 @@ class InMemoryStorage(Storage):
 
     def url(self, name):
         return f"/media/{name}"
+
+
+# Django >= 5.1 configures storages through STORAGES (DEFAULT_FILE_STORAGE was removed).
+_STATICFILES = {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}
+IN_MEMORY_STORAGES = {"default": {"BACKEND": "grm.test_storage.InMemoryStorage"}, "staticfiles": _STATICFILES}
+FILE_SYSTEM_STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": _STATICFILES,
+}

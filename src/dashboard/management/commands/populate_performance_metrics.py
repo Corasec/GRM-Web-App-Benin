@@ -1,3 +1,5 @@
+from datetime import timezone as dt_timezone
+
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -124,7 +126,7 @@ class Command(BaseCommand):
                 raise CommandError(f"Invalid --calculated-at datetime: {calculated_at_opt}")
             # Ensure timezone-aware (assume UTC if naive)
             if timezone.is_naive(parsed):
-                calculated_at = timezone.make_aware(parsed, timezone=timezone.utc)
+                calculated_at = timezone.make_aware(parsed, timezone=dt_timezone.utc)
             else:
                 calculated_at = parsed
         else:

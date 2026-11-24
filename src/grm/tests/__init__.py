@@ -17,13 +17,23 @@ AJAX_HEADER_VALUE = "XMLHttpRequest"
 class BaseTestCase(APITestCase):
     rest = True
     content_type = JSON_TYPE
-    eadl_db = get_db()
     user = None
+    _eadl_db = None
+
+    @property
+    def eadl_db(self):
+        # Legacy CouchDB connection, opened lazily: importing the test package
+        # must not require a running CouchDB server.
+        if self._eadl_db is None:
+            type(self)._eadl_db = get_db()
+        return self._eadl_db
 
     def tearDown(self):
         super().tearDown()
-        docs_to_delete = [d for d in self.eadl_db if "type" in d and d["type"] != "administrative_level"]
-        bulk_delete(self.eadl_db, docs_to_delete)
+        if self._eadl_db is None:
+            return
+        docs_to_delete = [d for d in self._eadl_db if "type" in d and d["type"] != "administrative_level"]
+        bulk_delete(self._eadl_db, docs_to_delete)
 
     @staticmethod
     def create_user(is_active=True, **kwargs):

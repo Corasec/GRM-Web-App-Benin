@@ -4,6 +4,7 @@ import pytest
 from django.test import TestCase, override_settings
 
 from authentication.factories import UserFactory
+from grm.test_storage import IN_MEMORY_STORAGES
 from grm.utils import reset_sequences
 from issues.factories import AdministrativeRegionFactory
 from wizard.constants import COMPLETED_CHOICE
@@ -16,7 +17,7 @@ AJAX_HEADER_VALUE = "XMLHttpRequest"
 
 
 @pytest.mark.django_db
-@override_settings(DEFAULT_FILE_STORAGE='grm.test_storage.InMemoryStorage', LANGUAGE_CODE='en-us')
+@override_settings(STORAGES=IN_MEMORY_STORAGES, LANGUAGE_CODE='en-us')
 class ViewTestCase(TestCase):
     content_type = URLENCODED_TYPE
     user = None

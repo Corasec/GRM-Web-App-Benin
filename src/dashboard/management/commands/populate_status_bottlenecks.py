@@ -16,6 +16,7 @@ This implementation:
 """
 
 from datetime import timedelta
+from datetime import timezone as dt_timezone
 
 from django.core.cache import cache
 from django.core.management.base import BaseCommand, CommandError
@@ -145,7 +146,7 @@ class Command(BaseCommand):
             if parsed is None:
                 raise CommandError(f"Invalid --calculated-at datetime: {calculated_at_opt}")
             if timezone.is_naive(parsed):
-                calculated_at = timezone.make_aware(parsed, timezone=timezone.utc)
+                calculated_at = timezone.make_aware(parsed, timezone=dt_timezone.utc)
             else:
                 calculated_at = parsed
         else:

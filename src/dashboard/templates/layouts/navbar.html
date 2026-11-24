@@ -20,10 +20,13 @@
             {% include 'layouts/language_dropdown.html' %}
         {% endif %}
         <li class="nav-item">
-            <a class="nav-link" href="{% url 'dashboard:authentication:logout' %}" title="{% translate 'Logout' %}"
-               role="button">
-                <i class="fa fa-sign-out"></i>
-            </a>
+            {# Django >= 5.0: logout only accepts POST #}
+            <form method="post" action="{% url 'dashboard:authentication:logout' %}" class="form-inline m-0">
+                {% csrf_token %}
+                <button type="submit" class="nav-link btn btn-link border-0" title="{% translate 'Logout' %}">
+                    <i class="fa fa-sign-out"></i>
+                </button>
+            </form>
         </li>
     </ul>
 </nav>

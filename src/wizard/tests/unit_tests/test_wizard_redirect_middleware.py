@@ -118,6 +118,6 @@ class TestWizardRedirectMiddleware(TestCase):
     def test_logout_url_is_accessible_for_all_users(self):
         """Logout URL is always accessible."""
         self.client.force_login(self.normal_user)
-        resp = self.client.get(reverse("dashboard:authentication:logout"))
+        resp = self.client.post(reverse("dashboard:authentication:logout"))
         assert resp.status_code == 302
         assert resp.url == self.login_url

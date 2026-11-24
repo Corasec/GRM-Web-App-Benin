@@ -16,7 +16,8 @@ class LogoutViewTest(DashboardTestCase):
     def test_logout_redirects_to_login_page(self):
         self.client.force_login(self.user)
 
-        response = self.get(self.logout_url, authorized=False)
+        response = self.client.post(self.logout_url)
 
         assert response.status_code == 302
         assert response.url == self.login_url
+        assert "_auth_user_id" not in self.client.session

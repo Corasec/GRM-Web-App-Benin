@@ -1,7 +1,8 @@
 # GRM-benin
 
 Requirements
-- Python version : `python3.10`
+- Python version : `python3.12`
+- Framework : Django 5.2 LTS
 - Database : `postgresql`
 
 Run the App
@@ -9,8 +10,8 @@ Run the App
 
 ## Setup
 
-Activate Python environment (use python 3)
-`python3.10 -m venv venv`
+Create a Python 3.12 virtual environment
+`python3.12 -m venv venv`
 
 Activate Python Environment
 `source venv/bin/activate`
@@ -20,15 +21,19 @@ Upgrade pip
 
 Install packages
 
-- `pip install -r requirements.txt`
-- `pip install -r requirements.dev.txt`
+- Production only: `pip install -r requirements.txt`
+- Development (includes production + tests and tooling): `pip install -r requirements.dev.txt`
+
+`requirements.txt` only lists the direct production dependencies, pinned. Test and tooling
+packages (pytest, factory-boy, Faker, black, pre-commit, pip-audit, debug toolbar) live in
+`requirements.dev.txt` and must not be installed in production.
 
 Start Application
 
-- Create a local environment file (customize according to your needs) from the provided template: `cp grm/.example.env grm/.env`. For example fill database credentials. Create the appropriate couchdb databases (administrative_levels, adb, grm, grmabd)
+- Create a local environment file (customize according to your needs) from the provided template: `cp grm/example.env grm/.env`. For example fill database credentials. The `COUCHDB_*` variables must be defined (placeholders are enough): CouchDB is deprecated and only needed to import data from a legacy deployment.
 - Do the same for `local_settings.py`: `cp grm/local_settings_template.py grm/local_settings.py` and update if needed.
-- `python3 manage.py migrate`
-- `python3 manage.py runserver`
+- `python manage.py migrate`
+- `python manage.py runserver`
 
 ## Configuration (for other country usage)
 
@@ -47,10 +52,14 @@ Start Application
 - 
 ### Tests
 To run the tests, you must meet the following requirements:
-- You must have a database named test created in CouchDB.
+- Development requirements installed (`pip install -r requirements.dev.txt`).
 - Your Postgres database user must have permissions
   (`ALTER USER your_db_user CREATEDB;`)
+
+A CouchDB server is no longer required to run the tests.
 
 Then run the command:
 `pytest`
 
+### Dependency security audit
+`pip-audit -r requirements.txt`

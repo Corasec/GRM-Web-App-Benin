@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="issuestatus",
             constraint=models.CheckConstraint(
-                check=models.Q(("threshold_days__gt", 0)),
+                condition=models.Q(("threshold_days__gt", 0)),
                 name="issues_issuestatus_threshold_days_gt_0",
                 violation_error_message="Threshold must be greater than zero.",
             ),

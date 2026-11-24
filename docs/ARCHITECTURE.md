@@ -73,7 +73,7 @@ flowchart TB
 
 | Layer | Technology |
 |---|---|
-| Framework | Django 4.2 (Python 3.10 per README) |
+| Framework | Django 5.2 LTS, Python 3.12 |
 | API | Django REST Framework + token auth; Swagger via `drf_yasg` (**DEBUG only**) |
 | UI | Django templates + Bootstrap 4, server-rendered |
 | Primary database | PostgreSQL (`DATABASE_URL`) |

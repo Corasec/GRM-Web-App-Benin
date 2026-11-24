@@ -10,13 +10,14 @@ from rest_framework.test import APITestCase
 
 from authentication.factories import UserFactory
 from grm.constants import ATTACHMENT_RETRIEVE_ERROR_MESSAGE, NOT_FOUND_MESSAGE
+from grm.test_storage import IN_MEMORY_STORAGES
 from grm.utils import reset_sequences
 from issues.factories import IssueAttachmentFactory, IssueFactory
 from issues.models import IssueAttachment
 
 
 @pytest.mark.django_db
-@override_settings(DEFAULT_FILE_STORAGE='grm.test_storage.InMemoryStorage', LANGUAGE_CODE='en-us')
+@override_settings(STORAGES=IN_MEMORY_STORAGES, LANGUAGE_CODE='en-us')
 class IssueAttachmentsListAPIViewTest(APITestCase):
     """
     Test cases for the IssueAttachment list API endpoint using Token Authentication.
@@ -141,7 +142,9 @@ class IssueAttachmentsListAPIViewTest(APITestCase):
         self.authenticate_with_token(self.reporter_token)
 
         # Force attachment1 to be older than attachment2
-        self.attachment1.created_date = self.attachment1.created_date.replace(year=self.attachment1.created_date.year - 1)
+        self.attachment1.created_date = self.attachment1.created_date.replace(
+            year=self.attachment1.created_date.year - 1
+        )
         self.attachment1.save(update_fields=["created_date"])
 
         # Filter by date after attachment1

@@ -18,6 +18,7 @@ from pathlib import Path
 import django.conf.locale
 import environ
 from django.conf import global_settings
+
 # https://django-environ.readthedocs.io/en/latest/
 env = environ.Env()
 env.read_env()
@@ -132,7 +133,6 @@ TIME_ZONE = env("TIME_ZONE", default="UTC")
 
 USE_I18N = True
 
-USE_L10N = True
 
 USE_TZ = True
 
@@ -297,9 +297,11 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'EXCEPTION_HANDLER': 'grm.exception_handler.api_exception_handler',
 }
 
 # drf-yasg
+SWAGGER_USE_COMPAT_RENDERERS = False
 SWAGGER_SETTINGS = {'SECURITY_DEFINITIONS': {'Token': {'type': 'apiKey', 'name': 'Authorization', 'in': 'header'}}}
 
 # HUGGING FACE API CONFIGURATION
@@ -320,9 +322,7 @@ HUGGINGFACE_API_TIMEOUT = env('HUGGINGFACE_API_TIMEOUT', default=30)
 HUGGINGFACE_MAX_RETRIES = env('HUGGINGFACE_MAX_RETRIES', default=3)
 
 # Logging configuration for Hugging Face connector
-_huggingface_log_path = (
-    "/tmp/huggingface.log" if os.environ.get("VERCEL") else str(BASE_DIR / "huggingface.log")
-)
+_huggingface_log_path = "/tmp/huggingface.log" if os.environ.get("VERCEL") else str(BASE_DIR / "huggingface.log")
 
 LOGGING = {
     'version': 1,
