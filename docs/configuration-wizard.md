@@ -289,3 +289,18 @@ Two things to watch: the seed migration and step 3's hardcoded `setup_step_3` ac
 | Formset/navigation behaviour | [`dashboard/static/js/wizard.js`](../src/dashboard/static/js/wizard.js) |
 | Seeded sections | [`0009_wizardsection_refactor.py`](../src/wizard/migrations/0009_wizardsection_refactor.py) |
 | Per-step tests | [`wizard/tests/`](../src/wizard/tests) |
+
+## After the wizard: "GRM configuration" page
+
+Once the wizard is finished, its pages are closed. The GRM owner (and superusers) use the dashboard
+menu **GRM configuration** (`/grm-configuration/`):
+
+- **Categorisation** (editable): tree Type › Subtype › Category. Add a type, a subtype under a type or a
+  category under a subtype (committee that receives it, sensitive or not, specific processing time,
+  abbreviation generated when empty); rename or adjust any item. New items reach the mobile app at its
+  next synchronisation — no new APK.
+- **Nothing in use can be deleted**: deleting would delete its issues (cascade). An item used by issues
+  can only be renamed; a type / subtype must be emptied first. The parent of an existing subtype or
+  category cannot be changed (the type / subtype of its issues would become inconsistent).
+- **Wizard configuration** (read only): project, levels and regions, committees and processing times,
+  statuses, age groups, components. They drive the routing of the issues in progress.

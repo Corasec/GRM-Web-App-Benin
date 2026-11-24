@@ -77,6 +77,15 @@
 						</a>
 					</li>
 				{% endif %}
+				{% if user.grm_owner or user.is_superuser %}
+					<li class="nav-item">
+						<a href="{% url 'dashboard:grm_configuration:home' %}"
+						   class="nav-link {% if active_level1 == 'grm_configuration' %}active{% endif %}">
+							<i class="nav-icon fas fa-sitemap"></i>
+							<p>{% translate "GRM configuration" %}</p>
+						</a>
+					</li>
+				{% endif %}
 
 				{% comment %}
 					<li class="nav-item">

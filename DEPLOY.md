@@ -140,6 +140,8 @@ Result: 876 committee accounts (CCGP per village, CLGP per commune, national com
 
 **Passwords afterwards:** each user can change their password in the app (*Profile → Change password*, needs a connection). When someone forgets it, a GRM manager sets a new one in the dashboard: *User Management → the user → Reset password* (asks the manager's own password). Nobody is forced to change the initial password for now.
 
+**Configuration afterwards:** the wizard closes once finished. The administrator (GRM owner) adds or renames types, subtypes and categories in the dashboard menu **GRM configuration**; the phones get them at their next synchronisation.
+
 ### 4.4 Optional checks in the admin (`/admin/`)
 
 Nothing is required. Useful views: *Periodic tasks* (scheduled jobs, all enabled), *Users*, *Government workers* (committee accounts), *Facilitators* (role FC / SC, covered villages).

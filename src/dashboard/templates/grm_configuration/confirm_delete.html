@@ -1,0 +1,29 @@
+{% extends 'layouts/base.html' %}{% load i18n %}
+
+{% block content %}
+	<div class="row">
+		<div class="col-lg-6">
+			<div class="card">
+				<div class="card-header"><h3 class="card-title text-bold">{% translate "Delete" %} « {{ obj }} »</h3></div>
+				<form method="post">
+					{% csrf_token %}
+					<div class="card-body">
+						{% if blocking_reason %}
+							<div class="alert alert-warning mb-0">
+								{% blocktranslate with name=obj reason=blocking_reason %}« {{ name }} » cannot be deleted: {{ reason }}.{% endblocktranslate %}
+							</div>
+						{% else %}
+							<p>{% translate "This item is not used by any issue. It will disappear from the mobile app at its next synchronisation." %}</p>
+						{% endif %}
+					</div>
+					<div class="card-footer">
+						<a href="{% url 'dashboard:grm_configuration:home' %}" class="btn btn-default">{% translate "Cancel" %}</a>
+						{% if not blocking_reason %}
+							<button type="submit" class="btn btn-danger float-right">{% translate "Delete" %}</button>
+						{% endif %}
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+{% endblock %}

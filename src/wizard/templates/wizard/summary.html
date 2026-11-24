@@ -12,58 +12,7 @@
 		</button>
 	</div>
 	<div id="summary-area">
-		{% for section in summary %}
-			<div class="mb-3 border-bottom border-dark">
-				<h5 class="text-bold">
-					{{ section.title }}
-				</h5>
-				{% for item in section.data %}
-					<div class="border-bottom ">
-						{% for field in item.fields %}
-							<div class="mt-2">
-								<label>{{ field.label }}:</label> {{ field.value }}
-							</div>
-						{% endfor %}
-						{% if item.subcomponents %}
-							<div class="mt-3 pl-4 border-left">
-								<div class="text-muted">{% translate "Subcomponents" %}</div>
-								{% for subcomponent in item.subcomponents %}
-									<div class="border-bottom">
-										{% for field in subcomponent.fields %}
-											<div class="mt-2">
-												<label>{{ field.label }}:</label> {{ field.value }}
-											</div>
-										{% endfor %}
-									</div>
-								{% endfor %}
-							</div>
-						{% endif %}
-					</div>
-				{% endfor %}
-				{% if section.regions_summary %}
-					<table class="table">
-						<thead>
-						<tr>
-							<th>{% translate "Administrative Level" %}</th>
-							<th>{% translate "Number of Instances" %}</th>
-						</tr>
-						</thead>
-						<tbody>
-						{% for level in section.regions_summary %}
-							<tr>
-								<td>{{ level.name }}</td>
-								<td>{{ level.region_count }}</td>
-							</tr>
-							{% empty %}
-							<tr>
-								<td colspan="2">{% translate "No administrative levels found." %}</td>
-							</tr>
-						{% endfor %}
-						</tbody>
-					</table>
-				{% endif %}
-			</div>
-		{% endfor %}
+		{% include 'wizard/_summary_sections.html' %}
 	</div>
 </div>
 <div class="card-footer">
