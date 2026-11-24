@@ -123,7 +123,6 @@ class IssueCreateAPIViewTest(APITestCase):
         self.client.force_authenticate(user=self.reporter_user)
 
         test_cases = [
-            {"expected_error_field": "description"},
             {"expected_error_field": "contact_medium"},
             {"expected_error_field": "intake_date"},
             {"expected_error_field": "issue_type"},
@@ -245,7 +244,6 @@ class IssueCreateAPIViewTest(APITestCase):
         self.client.force_authenticate(user=self.reporter_user)
         data = self.__get_valid_data()
         expected_fields = [
-            'description',
             'category',
             'issue_type',
             'administrative_region',
@@ -411,3 +409,16 @@ class IssueCreateAPIViewTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Issue.objects.get().status, initial)
+
+    def test_create_issue_without_description_and_complainant_name(self):
+        """Only the categorisation is mandatory: the complainant may stay anonymous, without description."""
+        self.client.force_authenticate(user=self.reporter_user)
+        data = self.__get_valid_data()
+        data.pop("description")
+        data["citizen"]["name"] = ""
+
+        response = self.client.post(self.url, data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        issue = Issue.objects.get()
+        self.assertIn(issue.description, (None, ""))

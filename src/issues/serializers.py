@@ -287,6 +287,8 @@ class CitizenSerializer(serializers.ModelSerializer):
     class Meta:
         model = Citizen
         fields = '__all__'
+        # The complainant may stay anonymous: the name is optional
+        extra_kwargs = {'name': {'required': False, 'allow_blank': True}}
 
 
 class IssueDetailSerializer(serializers.ModelSerializer):
@@ -349,7 +351,8 @@ class IssueCreateSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "contact_medium": {"required": True, "allow_null": False, "allow_blank": False},
             "contact_information": {"required": True, "allow_null": True, "allow_blank": True},
-            "description": {"required": True, "allow_null": False, "allow_blank": False},
+            # Only the categorisation is mandatory (COSO process): the description is optional
+            "description": {"required": False, "allow_null": True, "allow_blank": True},
             "intake_date": {"required": True, "allow_null": False},
             "ongoing_issue": {"required": False, "default": False},
         }
