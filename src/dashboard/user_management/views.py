@@ -45,6 +45,7 @@ from dashboard.user_management.forms import (
     FacilitatorCreationForm,
     GRMManagerCreationForm,
     PasswordConfirmForm,
+    ResetUserPasswordForm,
     UserProfileForm,
     UserUpdateForm,
 )
@@ -228,6 +229,8 @@ class UserDetailView(PageMixin, UserManagementPermissionMixin, generic.DetailVie
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["password_confirm_form"] = PasswordConfirmForm()
+        context["reset_password_form"] = ResetUserPasswordForm()
+        context["can_reset_password"] = self.request.user.is_superuser or not self.object.is_superuser
 
         user = self.object
         user_type = None
@@ -472,6 +475,39 @@ class ToggleUserStatusView(UserManagementPermissionMixin, generic.View):
         except Exception:
             raise Http404
 
+        return HttpResponseRedirect(reverse("dashboard:user_management:detail", kwargs={"pk": user.pk}))
+
+
+class ResetUserPasswordView(UserManagementPermissionMixin, generic.View):
+    """
+    A GRM manager sets a new password for an account (e.g. a committee secretary who forgot it),
+    after confirming with their own password. The mobile session of the account stays valid.
+    Only a superuser can reset the password of a superuser.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        if hasattr(request.user, 'grm_manager') and not request.user.grm_manager:
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        user = get_object_or_404(User, pk=kwargs["pk"])
+        if user.is_superuser and not request.user.is_superuser:
+            raise PermissionDenied
+        form = ResetUserPasswordForm(request.POST)
+        if not form.is_valid():
+            errors = " ".join(str(e) for field_errors in form.errors.values() for e in field_errors)
+            messages.add_message(request, messages.ERROR, errors, extra_tags="danger")
+        elif not request.user.check_password(form.cleaned_data["manager_password"]):
+            msg = _("The password was not correct, we could not proceed with action.")
+            messages.add_message(request, messages.ERROR, msg, extra_tags="danger")
+        else:
+            user.set_password(form.cleaned_data["new_password"])
+            user.save(update_fields=["password"])
+            msg = _("The password of %(email)s has been reset. Give the new password to the user.") % {
+                "email": user.email
+            }
+            messages.add_message(request, messages.SUCCESS, msg, extra_tags="success")
         return HttpResponseRedirect(reverse("dashboard:user_management:detail", kwargs={"pk": user.pk}))
 
 

@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from authentication.models import Facilitator, GovernmentWorker, User
+from authentication.passwords import PASSWORD_RULE_MESSAGE, is_valid_password
 from common.utils.forms import FileValidationMixin
 from dashboard.user_management.constants import (
     ADMINISTRATIVE_REGION_REQUIRED_MESSAGE,
@@ -76,6 +77,33 @@ class PasswordConfirmForm(forms.Form):
         required=True,
         label=_("Password"),
     )
+
+
+class ResetUserPasswordForm(forms.Form):
+    """New password typed by a GRM manager for an account (e.g. a committee that forgot it)."""
+
+    new_password = forms.CharField(
+        label=_("New password"),
+        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
+    )
+    confirm_password = forms.CharField(
+        label=_("Confirm the new password"),
+        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
+    )
+    manager_password = forms.CharField(
+        label=_("Your password"),
+        help_text=_("To confirm that you are allowed to do this."),
+        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "current-password"}),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get("new_password")
+        if new_password and not is_valid_password(new_password):
+            self.add_error("new_password", PASSWORD_RULE_MESSAGE)
+        if new_password and new_password != cleaned_data.get("confirm_password"):
+            self.add_error("confirm_password", _("Passwords do not match."))
+        return cleaned_data
 
 
 class UserProfileForm(FileValidationMixin, forms.ModelForm):

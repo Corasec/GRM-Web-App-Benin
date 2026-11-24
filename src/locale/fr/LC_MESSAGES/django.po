@@ -3146,3 +3146,38 @@ msgstr "Comptes importés :"
 #: wizard dashboard/user_management
 msgid "Back"
 msgstr "Retour"
+
+msgid "The password must have at least 8 characters, with letters and digits."
+msgstr "Le mot de passe doit contenir au moins 8 caractères, avec des lettres et des chiffres."
+
+msgid "The current password is not correct."
+msgstr "Le mot de passe actuel est incorrect."
+
+msgid "The new password must be different from the current one."
+msgstr "Le nouveau mot de passe doit être différent de l'actuel."
+
+msgid "Your password has been changed."
+msgstr "Votre mot de passe a été modifié."
+
+msgid "New password"
+msgstr "Nouveau mot de passe"
+
+msgid "Confirm the new password"
+msgstr "Confirmer le nouveau mot de passe"
+
+msgid "Your password"
+msgstr "Votre mot de passe"
+
+msgid "To confirm that you are allowed to do this."
+msgstr "Pour confirmer que vous êtes autorisé à le faire."
+
+#, python-format
+msgid "The password of %(email)s has been reset. Give the new password to the user."
+msgstr "Le mot de passe de %(email)s a été réinitialisé. Communiquez le nouveau mot de passe à l'utilisateur."
+
+msgid "Reset password"
+msgstr "Réinitialiser le mot de passe"
+
+#, python-format
+msgid "New password for %(email)s: at least 8 characters, with letters and digits. Give it to the user, who can change it later from the mobile app."
+msgstr "Nouveau mot de passe pour %(email)s : au moins 8 caractères, avec des lettres et des chiffres. Communiquez-le à l'utilisateur, qui pourra le changer ensuite depuis l'application mobile."

@@ -16,6 +16,11 @@ urlpatterns = [
         name="toggle_status",
     ),
     path(
+        "<int:pk>/reset-password/",
+        views.ResetUserPasswordView.as_view(),
+        name="reset_password",
+    ),
+    path(
         "<int:pk>/edit-profile/",
         views.EditUserProfileFormView.as_view(),
         name="edit_profile",

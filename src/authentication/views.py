@@ -30,6 +30,7 @@ from authentication.constants import (
 from authentication.forms import PasswordResetRequestForm
 from authentication.mobile import build_mobile_profile, get_mobile_account_type
 from authentication.models import Citizen, User
+from authentication.passwords import PASSWORD_RULE_MESSAGE, is_valid_password
 from authentication.serializers import (
     CitizenRegistrationSerializer,
     FacilitatorProfileSerializer,
@@ -814,6 +815,49 @@ class PasswordResetConfirmView(View):
 
         context["form"] = form
         return render(request, self.template_name, context)
+
+
+class ChangePasswordAPIView(APIView):
+    """
+    Change the password of the account logged in on the mobile app.
+
+    Body: ``current_password`` and ``new_password`` (at least 8 characters with letters and
+    digits, different from the current one). The token stays valid: the app keeps its session
+    and its offline data.
+    """
+
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Change my password",
+        tags=['Authentication'],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["current_password", "new_password"],
+            properties={
+                "current_password": openapi.Schema(type=openapi.TYPE_STRING),
+                "new_password": openapi.Schema(type=openapi.TYPE_STRING),
+            },
+        ),
+        responses={200: "Password changed", 400: "Wrong current password or invalid new password"},
+    )
+    def post(self, request):
+        current_password = request.data.get("current_password") or ""
+        new_password = request.data.get("new_password") or ""
+        user = request.user
+
+        if not user.check_password(current_password):
+            error = _("The current password is not correct.")
+        elif not is_valid_password(new_password):
+            error = PASSWORD_RULE_MESSAGE
+        elif new_password == current_password:
+            error = _("The new password must be different from the current one.")
+        else:
+            user.set_password(new_password)
+            user.save(update_fields=["password"])
+            return Response({"message": _("Your password has been changed.")}, status=status.HTTP_200_OK)
+        return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class MobileProfileAPIView(APIView):

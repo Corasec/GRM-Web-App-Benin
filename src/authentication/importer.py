@@ -23,10 +23,9 @@ from django.db import transaction
 from openpyxl import load_workbook
 
 from authentication.models import Facilitator, GovernmentWorker, User
+from authentication.passwords import is_valid_password
 from issues.models import AdministrativeRegion, IssueDepartment
 
-# Minimum strength of the shared initial password: at least 8 characters with letters and digits
-PASSWORD_PATTERN = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
 FIELD_ROLES = {"FC": Facilitator.ROLE_COMMUNITY_FACILITATOR, "SC": Facilitator.ROLE_COMMUNAL_SUPERVISOR}
 
 
@@ -52,7 +51,7 @@ def clean(value):
 
 
 def validate_password(password):
-    if not password or not PASSWORD_PATTERN.match(password):
+    if not is_valid_password(password):
         raise AccountsImportError(
             [
                 "Le mot de passe initial doit faire au moins 8 caractères et contenir des lettres et des chiffres "
