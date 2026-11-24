@@ -21,15 +21,21 @@
                     </div>
                 </div>
             {% else %}
-                <div class="alert modal modal-{{ message.extra_tags }} messageModal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-body alert-{{ message.extra_tags }}">
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">×</span>
-                                </button>
-                                {{ message | safe }}
-                            </div>
+                <div class="lm-preview-overlay show">
+                    <div class="lm-preview-modal">
+                        <div class="lm-preview-header">
+                            <h2>{{ message.extra_tags|capfirst }}</h2>
+                            <button type="button" class="lm-preview-close" aria-label="Close">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="lm-preview-body">
+                            {% if message.extra_tags == 'success' %}
+                            <div class="message-icon success"><i class="fas fa-check-circle"></i></div>
+                            {% elif message.extra_tags == 'danger' %}
+                            <div class="message-icon error"><i class="fas fa-exclamation-circle"></i></div>
+                            {% endif %}
+                            <p class="message-text">{{ message | safe }}</p>
                         </div>
                     </div>
                 </div>

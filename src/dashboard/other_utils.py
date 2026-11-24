@@ -91,3 +91,7 @@ def compare_excel_files(excel_path1, excel_path2):
         print(f"{excel_path1} && {excel_path2} have same datas")
     wb1.close()
     wb2.close()
+
+
+def is_grm_manager(request):
+    return getattr(request.user, 'grm_manager', False)

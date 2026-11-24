@@ -1,0 +1,33 @@
+{% extends base_template %}{% load i18n %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card card-danger">
+            <div class="card-header">
+                <h3 class="card-title">{% translate 'Confirm Delete' %}</h3>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        {% blocktranslate with title=material.title_fr|default:material.title_en %}
+                            Are you sure you want to delete "{{ title }}"?
+                        {% endblocktranslate %}
+                    </div>
+                    <p>{% translate 'This action cannot be undone.' %}</p>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash mr-1"></i>{% translate 'Delete' %}
+                    </button>
+                    <a href="{{ lm_url_detail }}" class="btn btn-default float-right">
+                        {% translate 'Cancel' %}
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

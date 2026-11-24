@@ -55,6 +55,26 @@
                         {% include 'common/messages.html' %}
                     </span>
                 </div>
+                <style>
+                    .lm-preview-body {
+                        text-align: center;
+                    }
+                    .lm-preview-body .message-icon {
+                        font-size: 40px;
+                        margin-bottom: 12px;
+                    }
+                    .lm-preview-body .message-icon i {
+                        color: #3B82F6;
+                    }
+                    .lm-preview-body .message-icon.error i {
+                        color: #EF4444;
+                    }
+                    .lm-preview-body .message-text {
+                        font-size: 14px;
+                        color: var(--gray-500, #6B7280);
+                        margin: 0;
+                    }
+                </style>
                 {% block content-header %}{% endblock %}
                 {% block content %}{% endblock %}
                 {% block content-footer %}{% endblock %}
