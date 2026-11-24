@@ -158,7 +158,7 @@ Status handling is special here. A successful upload marks **only this section**
 
 **View** `IssueDepartmentsFormView` · **Form** `IssueDepartmentFormSet` · **Template** `formset.html`
 
-The government units that resolve grievances. Each row is a department **name** plus a multi-select of the **administrative levels** it operates at.
+The government units that resolve grievances — for COSO, the grievance committees (CCGP, CLGP, national committee). Each row is a department **name**, a multi-select of the **administrative levels** it operates at, and its **processing time in working days** (CCGP 3, CLGP 3, national 5): past this time an issue is escalated automatically to the next committee (empty: no deadline).
 
 Saving creates the `IssueDepartment` and one `IssueDepartmentAdministrativeLevel` row per selected level, deleting links that were unselected. That join row — department *at* a level — is what categories actually point at in step 6, which is how the system knows a "Health" case in a given commune belongs to the health department at commune level.
 
@@ -190,7 +190,8 @@ The **routing table**, and the densest step in the wizard. Each row is one `Issu
 | Appeal department | Where an appeal on this category goes |
 | Escalation department | ⚠️ Stored, but **never read by the escalation code** — the model itself carries `# TODO: Remove this field` |
 | Confidentiality level | `Low` or `Anonymous` — controls whether reporter identity is exposed |
-| Redirection protocol | `Department head` or `Person with fewer issues` — the assignment rule inside the receiving department |
+| Redirection protocol | `Department head` or `Person with fewer issues` — ⚠️ no longer used: each committee has a single account |
+| Specific processing time | Replaces the committee processing time for this category, in working days (e.g. GBV / SEA / SH cases). Empty: committee time |
 
 Because this step consumes departments *and* subtypes, steps 4 and 5 must be meaningfully filled first. A category cannot be deleted once issues reference it.
 
@@ -212,7 +213,6 @@ You may rename them; the **flags are assigned by position on first save** and ar
 The two open-ended slots (`Created`, `Open`) additionally take:
 
 - **Threshold days** — SLA used by performance metrics. Must be greater than zero (enforced by the form *and* a DB check constraint).
-- **Threshold days to escalate** — after this many days in the status, escalation jobs pick the issue up. Optional; zero rejected.
 
 For `Rejected`/`Resolved` both threshold fields are removed from the form entirely.
 

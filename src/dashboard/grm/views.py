@@ -792,6 +792,8 @@ class IssueStatusButtonsTemplateView(IssueMixin, LoginRequiredAndAJAXRequestMixi
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["status"] = self.obj.status
+        context["is_overdue"] = self.obj.is_overdue
+        context["processing_deadline"] = self.obj.processing_deadline
 
         return context
 

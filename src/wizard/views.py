@@ -671,7 +671,7 @@ class SummaryView(LoginRequiredAndAJAXRequestMixin, TemplateView):
     def _get_departments_summary():
         """Get departments summary."""
         departments = (
-            IssueDepartmentAdministrativeLevel.objects.values('department__name')
+            IssueDepartmentAdministrativeLevel.objects.values('department__name', 'department__processing_days')
             .annotate(administrative_levels=ArrayAgg('administrative_level__name', distinct=True))
             .order_by('department__name')
         )
@@ -681,6 +681,10 @@ class SummaryView(LoginRequiredAndAJAXRequestMixin, TemplateView):
                 "fields": [
                     {"label": _("Name"), "value": dept["department__name"]},
                     {"label": _("Administrative levels"), "value": ', '.join(dept["administrative_levels"])},
+                    {
+                        "label": _("Processing time (working days)"),
+                        "value": dept["department__processing_days"] or NOT_APPLICABLE,
+                    },
                 ]
             }
             for dept in departments
@@ -731,6 +735,10 @@ class SummaryView(LoginRequiredAndAJAXRequestMixin, TemplateView):
                         "label": _("Redirection protocol"),
                         "value": MAP_REDIRECTION_PROTOCOL.get(cat.redirection_protocol, ""),
                     },
+                    {
+                        "label": _("Specific processing time (working days)"),
+                        "value": cat.processing_days or NOT_APPLICABLE,
+                    },
                 ]
             }
             for cat in categories
@@ -747,14 +755,6 @@ class SummaryView(LoginRequiredAndAJAXRequestMixin, TemplateView):
                     [
                         {"label": self._get_status_label(status), "value": status.name},
                         {"label": _('Threshold days'), "value": status.threshold_days},
-                        {
-                            "label": _('Threshold days to escalate'),
-                            "value": (
-                                status.threshold_days_to_escalate
-                                if status.threshold_days_to_escalate
-                                else NOT_APPLICABLE
-                            ),
-                        },
                     ]
                     if status.initial_status or status.open_status
                     else [

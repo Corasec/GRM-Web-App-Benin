@@ -177,7 +177,7 @@ Core entities in [issues/models.py](../src/issues/models.py):
 - `rating` (1–5, set by the reporter), `vectorized`, `alert_message_status`
 - `contact_medium` / `contact_method` — including **anonymous reporting**
 
-**`IssueStatus`** — statuses are data, not code. Each carries semantic flags (`initial_status`, `open_status`, `final_status`, `rejected_status`) plus two independent SLA numbers: `threshold_days` (performance colouring) and `threshold_days_to_escalate` (drives auto-escalation).
+**`IssueStatus`** — statuses are data, not code. Each carries semantic flags (`initial_status`, `open_status`, `final_status`, `rejected_status`) plus `threshold_days` (performance colouring). The legacy `threshold_days_to_escalate` is no longer used: escalation follows the committee processing time (`IssueDepartment.processing_days`, working days, optionally replaced per category by `IssueCategory.processing_days`).
 
 **`IssueStatusChange`** — an audit row per (issue, status) interval with `entered_at` / `exited_at`. This is what lets the system compute "days in current status".
 
@@ -207,7 +207,7 @@ The staff working surface is `dashboard/grm` ([urls.py](../src/dashboard/grm/url
 Handled by scheduled jobs in [grm/tasks.py](../src/grm/tasks.py):
 
 - **Automatic backfill and assignment** — `check_issues` sweeps confirmed issues and fills in three things: the **internal code**, the **anonymisation** of citizen data where required, and the **assignee**. Assignment (`Issue.get_assignee`) applies only when the category has a `redirection_protocol`: a village secretary in the issue's region gets it first, and otherwise it goes to the **least-loaded** government worker of the category's department in that region.
-- **Escalation** — along the committees CCGP (village) → CLGP (commune) → national committee, skipping levels without committee. Automatic (a daily job flags cases whose period — since the status or the last escalation — exceeds `threshold_days_to_escalate`; a job every 5 minutes executes the escalations), voluntary from the mobile app (immediate, reason required) or manual from the dashboard. De-escalation is manual only and goes back down towards the case location. All paths go through `issues/escalation.py`.
+- **Escalation** — along the committees CCGP (village) → CLGP (commune) → national committee, skipping levels without committee. Automatic (a daily job flags cases whose committee exceeded its processing time in working days — counted from creation or the last escalation, see `issues/deadlines.py` — and marks cases at the national committee as overdue; a job every 5 minutes executes the escalations), voluntary from the mobile app (immediate, after acceptance, reason required) or manual from the dashboard. De-escalation is manual only and goes back down towards the case location. All paths go through `issues/escalation.py`.
 - **Appeals** — an hourly job reassigns appealed issues to the head of the category's `assigned_appeal_department`. This is a **jump to a fixed department**, not a climb up the hierarchy.
 
 > Full detail, including the fact that there is **no cap on appeals**, is in [appeal-escalation-system.md](appeal-escalation-system.md).

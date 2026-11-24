@@ -21,7 +21,7 @@ from issues.factories import (
     IssueFactory,
     IssueStatusFactory,
 )
-from issues.models import Comment, IssueStatusChange
+from issues.models import Comment
 
 
 @pytest.mark.django_db
@@ -54,7 +54,10 @@ class CommitteeEscalationTest(TestCase):
             administrative_level=lvl["village"], parent=self.arrondissement
         )
 
-        ccgp, clgp, national = (IssueDepartmentFactory(name=n) for n in ["CCGP", "CLGP", "Comité national"])
+        ccgp, clgp, national = (
+            IssueDepartmentFactory(name=n, processing_days=d)
+            for n, d in [("CCGP", 3), ("CLGP", 3), ("Comité national", 5)]
+        )
         ccgp_at_village = IssueDepartmentAdministrativeLevelFactory(
             department=ccgp, administrative_level=lvl["village"]
         )
@@ -70,7 +73,7 @@ class CommitteeEscalationTest(TestCase):
         self.clgp_other = committee(clgp, self.other_commune)
         self.national = committee(national, self.country)
 
-        self.open_status = IssueStatusFactory(open_status=True, threshold_days=3, threshold_days_to_escalate=3)
+        self.open_status = IssueStatusFactory(open_status=True, threshold_days=3)
         self.resolved_status = IssueStatusFactory(final_status=True)
         self.category = IssueCategoryFactory(assigned_department=ccgp_at_village)
 
@@ -126,12 +129,13 @@ class CommitteeEscalationTest(TestCase):
     # --- automatic escalation ------------------------------------------------------------------
 
     def _overdue(self, issue, days):
-        IssueStatusChange.objects.filter(issue=issue).update(entered_at=timezone.now() - timedelta(days=days))
+        """The committee received the issue ``days`` calendar days ago."""
+        issue.__class__.objects.filter(pk=issue.pk).update(created_date=timezone.now() - timedelta(days=days))
 
     @patch("issues.escalation.send_issue_notification")
     def test_automatic_escalation_goes_one_committee_up(self, notify):
         issue = self._issue(self.ccgp)
-        self._overdue(issue, days=5)
+        self._overdue(issue, days=10)
 
         assert mark_issues_to_be_escalated()["updated_issues"] == 1
         result = escalate_issues()
@@ -146,17 +150,17 @@ class CommitteeEscalationTest(TestCase):
     def test_escalated_issue_gets_a_full_period_at_its_new_committee(self, notify):
         """Regression: the counter was not reset, so the issue climbed one level per day up to the top."""
         issue = self._issue(self.ccgp)
-        self._overdue(issue, days=5)
+        self._overdue(issue, days=10)
         mark_issues_to_be_escalated()
         escalate_issues()
 
-        # Next day: still more than 3 days in the status, but escalated less than 3 days ago
+        # Right after the escalation: the CLGP has a full new period
         assert mark_issues_to_be_escalated()["updated_issues"] == 0
         issue.refresh_from_db()
         assert issue.assignee == self.clgp
 
         # Once the new period is over, it goes up again
-        issue.__class__.objects.filter(pk=issue.pk).update(escalated_date=timezone.now() - timedelta(days=4))
+        issue.__class__.objects.filter(pk=issue.pk).update(escalated_date=timezone.now() - timedelta(days=10))
         assert mark_issues_to_be_escalated()["updated_issues"] == 1
         escalate_issues()
         issue.refresh_from_db()

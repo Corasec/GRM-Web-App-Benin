@@ -347,6 +347,14 @@ class IssueStatus(models.Model):
 class IssueDepartment(models.Model):
     name = models.CharField(max_length=255, unique=True, verbose_name=_("Name"))
     head = models.ForeignKey('authentication.User', null=True, blank=True, on_delete=models.SET_NULL)
+    # Maximum time for this committee (e.g. CCGP 3, CLGP 3, national 5) to process an issue, in working
+    # days (Monday to Friday). When it is exceeded the issue is escalated to the next committee.
+    processing_days = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_("Processing time (working days)"),
+        help_text=_("Working days (Monday to Friday) to process an issue before it is escalated. Empty: no deadline."),
+    )
     created_date = models.DateTimeField(auto_now_add=True, verbose_name=_('Created at'))
     updated_date = models.DateTimeField(auto_now=True, verbose_name=_('Updated at'))
 
@@ -432,6 +440,13 @@ class IssueCategory(models.Model):
     )
     redirection_protocol = models.SlugField(
         default=FEWER_ISSUES_CHOICE, choices=REDIRECTION_PROTOCOL_CHOICES, verbose_name=_("Redirection protocol")
+    )
+    # Replaces the committee processing time for this category (e.g. GBV / SEA / SH cases)
+    processing_days = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_("Specific processing time (working days)"),
+        help_text=_("Replaces the committee processing time for this category. Empty: committee processing time."),
     )
     created_date = models.DateTimeField(auto_now_add=True, verbose_name=_('Created at'))
     updated_date = models.DateTimeField(auto_now=True, verbose_name=_('Updated at'))
@@ -824,6 +839,20 @@ class Issue(models.Model):
             start = region
 
         return find_committee_account_upwards(start)
+
+    @property
+    def processing_deadline(self):
+        """Last working day for the committee in charge to process the issue (None: no deadline)."""
+        from issues.deadlines import processing_deadline
+
+        return processing_deadline(self)
+
+    @property
+    def is_overdue(self):
+        """The committee in charge exceeded its processing time (shown as "overdue" on the dashboard)."""
+        from issues.deadlines import is_overdue
+
+        return is_overdue(self)
 
     def current_committee_region(self):
         """

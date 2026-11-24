@@ -22,7 +22,10 @@
 		<td>{% get_days_until_today issue.created_date %}</td>
 		<td>{{ issue.category.name }}</td>
 		<td>{{ issue.issue_type.name }}</td>
-		<td>{{ issue.status.name }}</td>
+		<td>
+			{{ issue.status.name }}
+			{% if issue.is_overdue %}<span class="badge badge-danger ml-1">{% translate 'Overdue' %}</span>{% endif %}
+		</td>
 	</tr>
 	{% empty %}
 	<td class="text-center" colspan="8">
