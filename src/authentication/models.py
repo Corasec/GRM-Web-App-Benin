@@ -182,7 +182,17 @@ class Facilitator(models.Model):
     administrative_region = models.ForeignKey(
         "issues.AdministrativeRegion", on_delete=models.CASCADE, related_name='facilitators'
     )
+    # Villages covered by the facilitator (usually within one arrondissement, sometimes
+    # across several). They are the locations the facilitator can pick on the mobile app.
+    villages = models.ManyToManyField(
+        "issues.AdministrativeRegion",
+        blank=True,
+        related_name="covering_facilitators",
+        verbose_name=_("Covered villages"),
+    )
     unique_region = models.BooleanField(null=True)
+    # Legacy flag: village secretaries are now committee accounts (GovernmentWorker).
+    # No longer used for routing; kept for backward compatibility with old app versions.
     village_secretary = models.BooleanField(null=True)
     created_date = models.DateTimeField(auto_now_add=True, verbose_name=_('Created at'))
     updated_date = models.DateTimeField(auto_now=True, verbose_name=_('Updated at'))

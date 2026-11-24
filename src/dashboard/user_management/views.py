@@ -113,7 +113,7 @@ class UserListView(UserManagementAndAJAXMixin, generic.ListView):
                 if dept.head == user:
                     role_info += f" ({_('Head')})"
             elif user_type == FACILITATOR_CHOICE and hasattr(user, 'facilitator'):
-                role_info = f"{_('Village Secretary')}: {_('Yes') if user.facilitator.village_secretary else _('No')}"
+                role_info = f"{_('Covered villages')}: {user.facilitator.villages.count()}"
 
             users_with_type.append(
                 {
@@ -258,7 +258,7 @@ class UserDetailView(PageMixin, UserManagementPermissionMixin, generic.DetailVie
                 'type_display': FACILITATOR_DISPLAY,
                 'description': _("Community representative for a specific region."),
                 'administrative_region': facilitator.administrative_region.hierarchical_name,
-                'village_secretary': facilitator.village_secretary,
+                'villages': [village.hierarchical_name or village.name for village in facilitator.villages.all()],
             }
 
         context['user_type'] = user_type

@@ -10,9 +10,36 @@ from dashboard.user_management.constants import (
     COMMITTEE_ACCOUNT_EXISTS_MESSAGE,
     DEPARTMENT_ASSIGNMENT_ERROR_MESSAGE,
     DEPARTMENT_REQUIRED_MESSAGE,
+    VILLAGES_ONLY_ERROR_MESSAGE,
 )
 from grm.constants import EMAIL_ERROR_MESSAGE, USERNAME_ERROR_MESSAGE
 from issues.models import AdministrativeRegion, IssueDepartment
+
+
+def villages_field():
+    """Villages covered by a facilitator (searched with select2, leaf regions only)."""
+    return forms.ModelMultipleChoiceField(
+        queryset=AdministrativeRegion.objects.none(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "form-control villages"}),
+        label=_("Covered villages"),
+        help_text=_("Villages the facilitator works in. They are offered on the mobile app when reporting an issue."),
+    )
+
+
+def set_villages_queryset(field, data, initial_ids=()):
+    """Limit the choices to the submitted and initial ids (the list itself is loaded through select2)."""
+    ids = set(initial_ids)
+    if data:
+        ids.update(i for i in data.getlist("villages") if str(i).isdigit())
+    field.queryset = AdministrativeRegion.objects.filter(id__in=ids)
+
+
+def validate_villages(villages):
+    not_villages = [v for v in villages if v.children.exists()]
+    if not_villages:
+        raise ValidationError(VILLAGES_ONLY_ERROR_MESSAGE % {"regions": ", ".join(str(v) for v in not_villages)})
+    return villages
 
 
 def existing_committee_account_error(department, administrative_region, exclude_user=None):
@@ -262,11 +289,7 @@ class FacilitatorCreationForm(BaseUserCreationForm):
         widget=forms.Select(attrs={"class": "form-control region"}),
         label=_("Administrative Level"),
     )
-    village_secretary = forms.BooleanField(
-        required=False,
-        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
-        label=_("Is Village Secretary"),
-    )
+    villages = villages_field()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -279,6 +302,10 @@ class FacilitatorCreationForm(BaseUserCreationForm):
         if data and data.get("administrative_region"):
             region_id = data.get("administrative_region")
             self.fields["administrative_region"].queryset = AdministrativeRegion.objects.filter(id=region_id)
+        set_villages_queryset(self.fields["villages"], data)
+
+    def clean_villages(self):
+        return validate_villages(self.cleaned_data.get("villages") or [])
 
     def clean_administrative_region(self):
         administrative_region = self.cleaned_data.get("administrative_region")
@@ -297,11 +324,11 @@ class FacilitatorCreationForm(BaseUserCreationForm):
             phone_number=self.cleaned_data["phone_number"],
         )
 
-        Facilitator.objects.create(
+        facilitator = Facilitator.objects.create(
             user=user,
             administrative_region=self.cleaned_data["administrative_region"],
-            village_secretary=self.cleaned_data.get("village_secretary", False),
         )
+        facilitator.villages.set(self.cleaned_data.get("villages") or [])
 
         return user
 
@@ -331,11 +358,7 @@ class UserUpdateForm(forms.ModelForm):
     )
 
     # Facilitator field
-    village_secretary = forms.BooleanField(
-        required=False,
-        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
-        label=_("Is Village Secretary"),
-    )
+    villages = villages_field()
 
     class Meta:
         model = User
@@ -360,7 +383,9 @@ class UserUpdateForm(forms.ModelForm):
                 )
             elif hasattr(user, "facilitator"):
                 self.fields["administrative_region"].initial = user.facilitator.administrative_region
-                self.fields["village_secretary"].initial = user.facilitator.village_secretary
+                initial_villages = list(user.facilitator.villages.values_list("id", flat=True))
+                self.fields["villages"].initial = initial_villages
+                set_villages_queryset(self.fields["villages"], getattr(self, "data", None), initial_villages)
 
             if hasattr(user, "governmentworker") or hasattr(user, "facilitator"):
                 data = getattr(self, "data", None)
@@ -398,6 +423,10 @@ class UserUpdateForm(forms.ModelForm):
             administrative_region = cleaned_data.get("administrative_region")
             if not administrative_region:
                 self.add_error("administrative_region", ADMINISTRATIVE_REGION_REQUIRED_MESSAGE)
+            try:
+                validate_villages(cleaned_data.get("villages") or [])
+            except ValidationError as error:
+                self.add_error("villages", error)
 
         return cleaned_data
 
@@ -440,7 +469,7 @@ class UserUpdateForm(forms.ModelForm):
 
                 facilitator = user.facilitator
                 facilitator.administrative_region = self.cleaned_data.get("administrative_region")
-                facilitator.village_secretary = self.cleaned_data.get("village_secretary", False)
                 facilitator.save()
+                facilitator.villages.set(self.cleaned_data.get("villages") or [])
 
         return user

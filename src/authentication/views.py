@@ -24,9 +24,11 @@ from authentication.constants import (
     INVALID_INPUT_ERROR_MESSAGE,
     LOGIN_ERROR_MESSAGE,
     LOGIN_SUCCESS_MESSAGE,
+    MOBILE_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE,
     PASSWORD_RESET_REQUEST_MESSAGE,
 )
 from authentication.forms import PasswordResetRequestForm
+from authentication.mobile import build_mobile_profile, get_mobile_account_type
 from authentication.models import Citizen, User
 from authentication.serializers import (
     CitizenRegistrationSerializer,
@@ -130,10 +132,14 @@ class BaseLoginAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        username = serializer.validated_data["username"]
+        username = self.resolve_username(serializer.validated_data["username"])
         password = serializer.validated_data["password"]
 
         return self.handle_login(username, password)
+
+    def resolve_username(self, username):
+        """Hook for subclasses to map the submitted identifier to a username."""
+        return username
 
 
 class LoginAPIView(BaseLoginAPIView):
@@ -206,6 +212,26 @@ class LoginAPIView(BaseLoginAPIView):
     )
     def post(self, request):
         return super().post(request)
+
+    def resolve_username(self, username):
+        """
+        The mobile login screen asks for an email: accept the account email as well as the
+        username (committee accounts created from the dashboard have a separate username).
+        """
+        if "@" in username and not User.objects.filter(username=username).exists():
+            user = User.objects.filter(email__iexact=username).only("username").first()
+            if user:
+                return user.username
+        return username
+
+    def extra_validations(self, user):
+        """The mobile app is only for committee accounts and facilitators."""
+        if get_mobile_account_type(user) is None:
+            return Response(
+                {"error": MOBILE_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
 
 
 class CitizenLoginAPIView(BaseLoginAPIView):
@@ -788,6 +814,34 @@ class PasswordResetConfirmView(View):
 
         context["form"] = form
         return render(request, self.template_name, context)
+
+
+class MobileProfileAPIView(APIView):
+    """
+    Profile of the account logged in on the mobile app.
+
+    - ``account_type``: ``committee`` (CCGP, CLGP or national committee secretary: receives and
+      processes issues) or ``facilitator`` (creates and follows issues only).
+    - ``can_process_issues``: whether the account can accept, reject, resolve or escalate issues.
+    - ``committee``: department and administrative level of a committee account, else ``null``.
+    - ``location``: locations offered by the issue "location" step. ``mode`` is ``fixed``
+      (single preselected region), ``list`` (choose one of ``regions``) or ``free`` (any region).
+
+    Other accounts get a 403.
+    """
+
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Mobile account profile",
+        tags=['Authentication'],
+        responses={403: openapi.Response(description="Account not allowed on the mobile app")},
+    )
+    def get(self, request):
+        if get_mobile_account_type(request.user) is None:
+            return Response({"error": MOBILE_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE}, status=status.HTTP_403_FORBIDDEN)
+        return Response(build_mobile_profile(request.user), status=status.HTTP_200_OK)
 
 
 class FacilitatorProfileAPIView(APIView):

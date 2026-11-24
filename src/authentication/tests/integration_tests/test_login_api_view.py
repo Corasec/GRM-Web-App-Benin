@@ -11,8 +11,9 @@ from authentication.constants import (
     INVALID_INPUT_ERROR_MESSAGE,
     LOGIN_ERROR_MESSAGE,
     LOGIN_SUCCESS_MESSAGE,
+    MOBILE_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE,
 )
-from authentication.factories import UserFactory
+from authentication.factories import FacilitatorFactory, GovernmentWorkerFactory, UserFactory
 from authentication.models import User
 
 
@@ -34,6 +35,8 @@ class LoginAPIViewTest(APITestCase):
         self.username = "testuser"
         self.password = "testpassword123"
         self.user = UserFactory(username=self.username, password=self.password, is_active=True)
+        # The mobile login only accepts committee and facilitator accounts
+        FacilitatorFactory(user=self.user)
 
     def test_successful_login(self):
         """Test successful login with valid credentials."""
@@ -262,6 +265,7 @@ class LoginAPIViewTest(APITestCase):
         unicode_user = UserFactory(
             username=unicode_username, email='user@example.com', password=unicode_password, is_active=True
         )
+        FacilitatorFactory(user=unicode_user, administrative_region=self.user.facilitator.administrative_region)
 
         login_data = {'username': unicode_username, 'password': unicode_password}
 
@@ -270,3 +274,37 @@ class LoginAPIViewTest(APITestCase):
         assert response.status_code == status.HTTP_200_OK
         assert response.data['username'] == unicode_username
         assert response.data['user_id'] == unicode_user.id
+
+    def test_committee_account_can_login(self):
+        """Committee accounts (CCGP, CLGP, national) use the mobile app."""
+        committee_user = UserFactory(username="ccgp-village", password="secret-pass-1", is_active=True)
+        GovernmentWorkerFactory(user=committee_user, administrative_region=self.user.facilitator.administrative_region)
+
+        response = self.client.post(self.url, {'username': "ccgp-village", 'password': "secret-pass-1"}, format='json')
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['user_id'] == committee_user.id
+
+    def test_account_neither_committee_nor_facilitator_is_refused(self):
+        """GRM managers, citizens or plain users cannot log in on the mobile app."""
+        UserFactory(username="manager", password="secret-pass-2", is_active=True, grm_manager=True)
+
+        response = self.client.post(self.url, {'username': "manager", 'password': "secret-pass-2"}, format='json')
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.data['error'] == MOBILE_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE
+        assert not Token.objects.filter(user__username="manager").exists()
+
+    def test_committee_account_can_login_with_its_email(self):
+        """The mobile login screen asks for an email; committee usernames differ from emails."""
+        committee_user = UserFactory(
+            username="clgp-malanville", email="clgp.malanville@example.com", password="secret-pass-3", is_active=True
+        )
+        GovernmentWorkerFactory(user=committee_user, administrative_region=self.user.facilitator.administrative_region)
+
+        response = self.client.post(
+            self.url, {'username': "CLGP.Malanville@example.com", 'password': "secret-pass-3"}, format='json'
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['user_id'] == committee_user.id

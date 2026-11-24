@@ -76,7 +76,7 @@
 							</div>
 							<div class="row">
 								<div class="col-md-12">
-									{% bootstrap_field form.village_secretary form_group_class="form-check" show_label=True %}
+									{% bootstrap_field form.villages %}
 								</div>
 							</div>
 						{% endif %}
@@ -109,6 +109,25 @@
 
 	<script type="text/javascript">
         $(document).ready(function () {
+            // Villages covered by a facilitator (selected ones are rendered by the form)
+            $('.villages').select2({
+                ajax: {
+                    url: "{% url 'dashboard:grm:get_region_choices_for_select2' %}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {q: params.term, base_regions: 1};
+                    },
+                    processResults: function (data) {
+                        return {results: data};
+                    },
+                },
+                width: '100%',
+                minimumInputLength: 1,
+                placeholder: "{% translate 'Search and select villages' %}",
+                cache: true
+            });
+
             const $regionSelect = $('#id_administrative_region');
             const initialId = "{{ form.administrative_region.initial.id|default:'' }}";
             const url = "{% url 'dashboard:grm:get_region_choices_for_select2' %}";

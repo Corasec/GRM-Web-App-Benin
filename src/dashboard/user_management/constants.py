@@ -34,3 +34,4 @@ ADMINISTRATIVE_REGION_REQUIRED_MESSAGE = _("Administrative level is required.")
 COMMITTEE_ACCOUNT_EXISTS_MESSAGE = _(
     "A committee account already exists for '%(dept)s' in '%(region)s': %(name)s. Only one account per committee is allowed."
 )
+VILLAGES_ONLY_ERROR_MESSAGE = _("Only villages (regions without sub-regions) can be selected: %(regions)s.")

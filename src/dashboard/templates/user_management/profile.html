@@ -64,9 +64,18 @@
 										<label class="d-inline-block">{% translate 'Administrative Region' %}:</label>
 										<div class="d-inline-block">
 											{{ role_info.administrative_region }}
-											{% if role_info.village_secretary %}
-												<span class="badge badge-info ml-2">{% translate 'Village Secretary' %}</span>
-											{% endif %}
+										</div>
+									</div>
+								</div>
+								<div class="row mb-2">
+									<div class="col-md-12">
+										<label class="d-inline-block">{% translate 'Covered villages' %}:</label>
+										<div class="d-inline-block">
+											{% for village in role_info.villages %}
+												<span class="badge badge-light mr-1">{{ village }}</span>
+											{% empty %}
+												<span class="text-muted">{% translate 'None' %}</span>
+											{% endfor %}
 										</div>
 									</div>
 								</div>

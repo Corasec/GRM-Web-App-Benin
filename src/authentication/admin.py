@@ -97,23 +97,17 @@ class FacilitatorAdmin(admin.ModelAdmin):
     fields = (
         "user",
         "administrative_region",
-        "unique_region",
-        "village_secretary",
+        "villages",
     )
     raw_id_fields = (
         "user",
         "administrative_region",
+        "villages",
     )
     list_display = (
         "id",
         "user",
         "administrative_region",
-        "unique_region",
-        "village_secretary",
-    )
-    list_filter = (
-        "unique_region",
-        "village_secretary",
     )
     search_fields = (
         "id",

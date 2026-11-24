@@ -7,7 +7,7 @@ from dashboard.user_management.constants import (
     GRM_MANAGER_CHOICE,
 )
 from grm.tests.base import DashboardTestCase
-from issues.factories import IssueDepartmentFactory
+from issues.factories import AdministrativeRegionFactory, IssueDepartmentFactory
 
 
 class CreateUserViewTest(DashboardTestCase):
@@ -19,6 +19,8 @@ class CreateUserViewTest(DashboardTestCase):
         self.normal_user = UserFactory()
         self.department = IssueDepartmentFactory()
         self.url = reverse("dashboard:user_management:create")
+        self.village_a = AdministrativeRegionFactory(parent=self.root_region, name="Village A")
+        self.village_b = AdministrativeRegionFactory(parent=self.root_region, name="Village B")
 
     def test_access_denied_without_ajax(self):
         """View should return 404 without AJAX header"""
@@ -93,7 +95,7 @@ class CreateUserViewTest(DashboardTestCase):
             "password": "SecurePass123!",
             "confirm_password": "SecurePass123!",
             "administrative_region": self.root_region.id,
-            "village_secretary": True,
+            "villages": [self.village_a.id, self.village_b.id],
         }
 
         resp = self.post(self.url, data, user=self.manager, ajax=True)
@@ -105,7 +107,7 @@ class CreateUserViewTest(DashboardTestCase):
 
         user = User.objects.get(id=json_data["user_id"])
         assert hasattr(user, "facilitator")
-        assert user.facilitator.village_secretary is True
+        assert set(user.facilitator.villages.values_list("id", flat=True)) == {self.village_a.id, self.village_b.id}
         assert user.username == user.email
 
     def test_create_user_with_mismatched_passwords(self):
@@ -195,3 +197,22 @@ class CreateUserViewTest(DashboardTestCase):
         json_data = resp.json()
         assert json_data["success"] is False
         assert "errors" in json_data
+
+    def test_facilitator_villages_must_be_villages(self):
+        """Only regions without sub-regions can be selected as covered villages."""
+        data = {
+            "user_type": FACILITATOR_CHOICE,
+            "first_name": "Bob",
+            "last_name": "Field",
+            "email": "bob@example.com",
+            "phone_number": "5555555555",
+            "password": "SecurePass123!",
+            "confirm_password": "SecurePass123!",
+            "administrative_region": self.root_region.id,
+            "villages": [self.root_region.id],
+        }
+
+        resp = self.post(self.url, data, user=self.manager, ajax=True)
+        json_data = resp.json()
+        assert json_data["success"] is False
+        assert "villages" in json_data["errors"]
