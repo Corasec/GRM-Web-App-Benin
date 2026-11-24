@@ -7,7 +7,7 @@
 name: grm
 
 x-app: &app
-  image: ${GRM_IMAGE:-cosobenin/grm-app:latest}
+  image: ${GRM_IMAGE:-cosobenin/grm-app:v.2.1.0}
   restart: always
   env_file: .env
   volumes:

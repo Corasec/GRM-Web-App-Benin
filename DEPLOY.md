@@ -15,11 +15,14 @@ Internet ──HTTPS──> domain provider ──HTTP──> VM:80 nginx ──
 
 ```bash
 cd GRM-Web-App-Benin/src
-docker build -t cosobenin/grm-app:v2.1.0 .
-docker push cosobenin/grm-app:v2.1.0
+docker build -t cosobenin/grm-app:v.2.1.0 .
+docker push cosobenin/grm-app:v.2.1.0
 ```
 
 Use a new tag for every release (never overwrite a tag): it makes rollbacks a one-line change.
+Tags so far: `v.1.0.8`, `v.2.0.0` (before the field audit), **`v.2.1.0`** (field deployment, November 2026:
+committee routing, escalation, deadlines, Excel imports, password change, GRM configuration page).
+Put the tag of the release in `GRM_IMAGE` (`.env` on the VM).
 
 ---
 
@@ -156,10 +159,10 @@ The APK must point to the production API: set `API_AUTH_BASE_URL=https://<domain
 
 ```bash
 # on your machine
-docker build -t cosobenin/grm-app:v2.2.0 GRM-Web-App-Benin/src && docker push cosobenin/grm-app:v2.2.0
+docker build -t cosobenin/grm-app:v.2.2.0 GRM-Web-App-Benin/src && docker push cosobenin/grm-app:v.2.2.0
 # on the VM
 cd /opt/grm
-sed -i 's#^GRM_IMAGE=.*#GRM_IMAGE=cosobenin/grm-app:v2.2.0#' .env
+sed -i 's#^GRM_IMAGE=.*#GRM_IMAGE=cosobenin/grm-app:v.2.2.0#' .env
 docker compose pull && docker compose up -d     # migrations run automatically
 ```
 
