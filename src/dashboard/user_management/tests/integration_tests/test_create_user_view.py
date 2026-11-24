@@ -95,6 +95,7 @@ class CreateUserViewTest(DashboardTestCase):
             "password": "SecurePass123!",
             "confirm_password": "SecurePass123!",
             "administrative_region": self.root_region.id,
+            "role": "FC",
             "villages": [self.village_a.id, self.village_b.id],
         }
 
@@ -108,6 +109,7 @@ class CreateUserViewTest(DashboardTestCase):
         user = User.objects.get(id=json_data["user_id"])
         assert hasattr(user, "facilitator")
         assert set(user.facilitator.villages.values_list("id", flat=True)) == {self.village_a.id, self.village_b.id}
+        assert user.facilitator.role == "FC"
         assert user.username == user.email
 
     def test_create_user_with_mismatched_passwords(self):
@@ -209,6 +211,7 @@ class CreateUserViewTest(DashboardTestCase):
             "password": "SecurePass123!",
             "confirm_password": "SecurePass123!",
             "administrative_region": self.root_region.id,
+            "role": "SC",
             "villages": [self.root_region.id],
         }
 

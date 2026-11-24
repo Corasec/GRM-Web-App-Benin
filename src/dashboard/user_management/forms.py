@@ -289,6 +289,11 @@ class FacilitatorCreationForm(BaseUserCreationForm):
         widget=forms.Select(attrs={"class": "form-control region"}),
         label=_("Administrative Level"),
     )
+    role = forms.ChoiceField(
+        choices=Facilitator.ROLE_CHOICES,
+        widget=forms.Select(attrs={"class": "form-control"}),
+        label=_("Role"),
+    )
     villages = villages_field()
 
     def __init__(self, *args, **kwargs):
@@ -327,6 +332,7 @@ class FacilitatorCreationForm(BaseUserCreationForm):
         facilitator = Facilitator.objects.create(
             user=user,
             administrative_region=self.cleaned_data["administrative_region"],
+            role=self.cleaned_data["role"],
         )
         facilitator.villages.set(self.cleaned_data.get("villages") or [])
 
@@ -357,7 +363,13 @@ class UserUpdateForm(forms.ModelForm):
         label=_("Is Department Head"),
     )
 
-    # Facilitator field
+    # Facilitator fields
+    role = forms.ChoiceField(
+        choices=[("", "")] + Facilitator.ROLE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={"class": "form-control"}),
+        label=_("Role"),
+    )
     villages = villages_field()
 
     class Meta:
@@ -383,6 +395,7 @@ class UserUpdateForm(forms.ModelForm):
                 )
             elif hasattr(user, "facilitator"):
                 self.fields["administrative_region"].initial = user.facilitator.administrative_region
+                self.fields["role"].initial = user.facilitator.role
                 initial_villages = list(user.facilitator.villages.values_list("id", flat=True))
                 self.fields["villages"].initial = initial_villages
                 set_villages_queryset(self.fields["villages"], getattr(self, "data", None), initial_villages)
@@ -469,6 +482,7 @@ class UserUpdateForm(forms.ModelForm):
 
                 facilitator = user.facilitator
                 facilitator.administrative_region = self.cleaned_data.get("administrative_region")
+                facilitator.role = self.cleaned_data.get("role") or ""
                 facilitator.save()
                 facilitator.villages.set(self.cleaned_data.get("villages") or [])
 

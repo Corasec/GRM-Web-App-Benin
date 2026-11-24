@@ -109,5 +109,7 @@ def build_mobile_profile(user):
         },
         "administrative_region": _region_data(region),
         "committee": committee,
+        # Field staff role ("FC" community facilitator, "SC" communal supervisor), "" for committees
+        "field_role": user.facilitator.role if account_type == ACCOUNT_TYPE_FACILITATOR else "",
         "location": {"mode": mode, "regions": [_region_data(r) for r in regions]},
     }
