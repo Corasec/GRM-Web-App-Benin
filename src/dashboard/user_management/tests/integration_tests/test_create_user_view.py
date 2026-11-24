@@ -219,3 +219,61 @@ class CreateUserViewTest(DashboardTestCase):
         json_data = resp.json()
         assert json_data["success"] is False
         assert "villages" in json_data["errors"]
+
+
+class AccountsImportViewTest(DashboardTestCase):
+    """Accounts import page (GRM managers only)."""
+
+    def setUp(self):
+        super().setUp()
+        from issues.models import AdministrativeRegion
+        from wizard.importer import import_configuration
+        from wizard.tests.unit_tests.test_configuration_import import build_workbook
+
+        AdministrativeRegion.objects.all().delete()
+        import_configuration(build_workbook())
+        # the configuration import leaves the summary to validate: finish the wizard
+        from wizard.constants import COMPLETED_CHOICE
+        from wizard.models import WizardSection
+
+        WizardSection.objects.update(status=COMPLETED_CHOICE)
+        self.manager = UserFactory(grm_manager=True)
+        self.url = reverse("dashboard:user_management:import_accounts")
+
+    def _post(self, password="Mgp2026init", confirm=None, user=None):
+        from authentication.tests.unit_tests.test_accounts_import import build_accounts
+
+        upload = build_accounts()
+        upload.name = "comptes.xlsx"
+        self.client.force_login(user or self.manager)
+        return self.client.post(
+            self.url, {"accounts_file": upload, "password": password, "confirm_password": confirm or password}
+        )
+
+    def test_non_manager_cannot_access(self):
+        self.client.force_login(UserFactory())
+        assert self.client.get(self.url).status_code == 403
+
+    def test_manager_imports_accounts(self):
+        from authentication.models import Facilitator, GovernmentWorker
+
+        response = self._post()
+
+        assert response.status_code == 200
+        assert response.context["report"].counts == {"comptes comité": 3, "comptes facilitateur": 2}
+        assert GovernmentWorker.objects.count() == 3
+        assert Facilitator.objects.count() == 2
+
+    def test_password_confirmation_must_match(self):
+        from authentication.models import GovernmentWorker
+
+        response = self._post(confirm="Different123")
+
+        assert response.status_code == 200
+        assert "confirm_password" in response.context["form"].errors
+        assert not GovernmentWorker.objects.exists()
+
+    def test_errors_are_listed(self):
+        response = self._post(password="weak")
+
+        assert response.context["import_errors"]

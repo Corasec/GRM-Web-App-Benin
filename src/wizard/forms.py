@@ -25,7 +25,6 @@ from wizard.constants import (
     INVALID_EXCEL_FILE_ERROR_MESSAGE,
     ITEM_DELETE_ERROR_MESSAGE,
     ONLY_EXCEL_FILE_EXTENSIONS_ERROR_MESSAGE,
-    SUBCOMPONENT_REQUIRED_ERROR_MESSAGE,
 )
 
 
@@ -606,38 +605,16 @@ class SubComponentInlineFormSet(forms.BaseInlineFormSet):
     """Inline formset for SubComponents with validation."""
 
     def clean(self):
-        """Ensure each Component has at least one SubComponent and validate restricted deletions."""
+        """Validate restricted deletions. Subcomponents are optional (e.g. Benin only asks for the component)."""
         super().clean()
 
         if any(self.errors):
             return
 
-        # Check if the parent Component is marked for deletion
-        # If so, skip the minimum SubComponent validation
-        parent_form = getattr(self, 'parent_form', None)
-
-        # Count non-deleted forms with data
-        valid_forms = 0
         for form in self.forms:
-            if form.cleaned_data:
-                is_deleted = form.cleaned_data.get('DELETE', False)
-
-                # Check if trying to delete a SubComponent with restricted_deletion
-                if is_deleted and form.instance.pk:
-                    if getattr(form.instance, 'restricted_deletion', False):
-                        raise forms.ValidationError(ITEM_DELETE_ERROR_MESSAGE % {'name': form.instance.name})
-
-                if parent_form and parent_form.cleaned_data.get('DELETE', False):
-                    # Parent is being deleted, so we don't need to validate SubComponents
-                    return
-
-                # Count valid (non-deleted) forms
-                if not is_deleted:
-                    if form.cleaned_data.get('name') or form.cleaned_data.get('description'):
-                        valid_forms += 1
-
-        if valid_forms < 1:
-            raise forms.ValidationError(SUBCOMPONENT_REQUIRED_ERROR_MESSAGE)
+            if form.cleaned_data and form.cleaned_data.get('DELETE', False) and form.instance.pk:
+                if getattr(form.instance, 'restricted_deletion', False):
+                    raise forms.ValidationError(ITEM_DELETE_ERROR_MESSAGE % {'name': form.instance.name})
 
 
 # Create inline formset for SubComponents

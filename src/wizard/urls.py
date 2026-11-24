@@ -1,5 +1,5 @@
-from django.urls import path
 from django.db import OperationalError, ProgrammingError
+from django.urls import path
 
 from wizard import views
 from wizard.registry import get_all_wizard_steps
@@ -11,6 +11,7 @@ urlpatterns = [
     path("wizard-section-list", views.WizardSectionListView.as_view(), name="wizard_section_list"),
     path("download-regions-sample", views.DownloadRegionsSampleView.as_view(), name="download_regions_sample"),
     path("next-step/<int:step>/", views.NextStepView.as_view(), name="next_step"),
+    path("import-configuration/", views.ConfigurationImportView.as_view(), name="import_configuration"),
 ]
 
 # Generate URLs dynamically from the registry

@@ -3078,3 +3078,71 @@ msgstr "Facilitateur communautaire (FC)"
 #: authentication/models.py
 msgid "Communal supervisor (SC)"
 msgstr "Superviseur communal (SC)"
+
+#: wizard dashboard/user_management
+msgid "Import from Excel"
+msgstr "Importer depuis Excel"
+
+#: wizard dashboard/user_management
+msgid "Fill every step at once from a configuration workbook (levels, hierarchy, committees, types and categories, age groups, components). It replaces the current configuration; you then review the summary and validate it."
+msgstr "Remplit toutes les étapes d'un coup à partir d'un classeur de configuration (niveaux, hiérarchie, comités, types et catégories, tranches d'âge, composantes). Il remplace la configuration actuelle ; vous relisez ensuite le récapitulatif et le validez."
+
+#: wizard dashboard/user_management
+msgid "Import"
+msgstr "Importer"
+
+#: wizard dashboard/user_management
+msgid "Select the Excel configuration file to import."
+msgstr "Sélectionnez le fichier Excel de configuration à importer."
+
+#: wizard dashboard/user_management
+msgid "Import refused, nothing was written: %(errors)s"
+msgstr "Import refusé, rien n'a été enregistré : %(errors)s"
+
+#: wizard dashboard/user_management
+msgid "Configuration imported (%(details)s). Review the summary and validate it."
+msgstr "Configuration importée (%(details)s). Relisez le récapitulatif et validez-le."
+
+#: wizard dashboard/user_management
+msgid "Import accounts"
+msgstr "Importer des comptes"
+
+#: wizard dashboard/user_management
+msgid "Import accounts from Excel"
+msgstr "Importer des comptes depuis Excel"
+
+#: wizard dashboard/user_management
+msgid "Accounts workbook (.xlsx)"
+msgstr "Classeur des comptes (.xlsx)"
+
+#: wizard dashboard/user_management
+msgid "Initial password"
+msgstr "Mot de passe initial"
+
+#: wizard dashboard/user_management
+msgid "Same initial password for every created account: at least 8 characters with letters and digits."
+msgstr "Même mot de passe initial pour tous les comptes créés : au moins 8 caractères avec des lettres et des chiffres."
+
+#: wizard dashboard/user_management
+msgid "Confirm the password"
+msgstr "Confirmer le mot de passe"
+
+#: wizard dashboard/user_management
+msgid "The passwords do not match."
+msgstr "Les mots de passe ne correspondent pas."
+
+#: wizard dashboard/user_management
+msgid "Creates the committee accounts (CCGP, CLGP, national committee) and the field staff accounts (FC, SC) with their covered villages. The login identifier is the email. Existing emails are skipped. The file is fully checked first: if there is an error, nothing is created."
+msgstr "Crée les comptes comité (CCGP, CLGP, comité national) et les comptes du personnel de terrain (FC, SC) avec leurs villages couverts. L'identifiant de connexion est l'email. Les emails déjà existants sont ignorés. Le fichier est entièrement vérifié d'abord : en cas d'erreur, rien n'est créé."
+
+#: wizard dashboard/user_management
+msgid "Import refused, nothing was created:"
+msgstr "Import refusé, aucun compte créé :"
+
+#: wizard dashboard/user_management
+msgid "Accounts imported:"
+msgstr "Comptes importés :"
+
+#: wizard dashboard/user_management
+msgid "Back"
+msgstr "Retour"

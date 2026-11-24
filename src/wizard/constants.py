@@ -68,7 +68,6 @@ ADMINISTRATIVE_LEVEL_UPLOAD_ROOT_UNIQUE_MESSAGE = _(
 )
 ONLY_EXCEL_FILE_EXTENSIONS_ERROR_MESSAGE = _("Only Excel files (.xls, .xlsx) are allowed.")
 INVALID_EXCEL_FILE_ERROR_MESSAGE = _("The uploaded file is not a valid Excel file.")
-SUBCOMPONENT_REQUIRED_ERROR_MESSAGE = _('Each component must have at least one subcomponent.')
 NOT_STARTED_CHOICE = "not_started"
 NOT_STARTED_DISPLAY = _("Not Started")
 IN_PROGRESS_CHOICE = "in_progress"
