@@ -10,7 +10,7 @@ from django.db.models import Count
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
-from authentication.models import Cdata, Facilitator, GovernmentWorker, Pdata, User
+from authentication.models import Cdata, GovernmentWorker, Pdata, User
 from dashboard.constants import STATUS_AT_RISK, STATUS_CRITICAL, STATUS_GOOD, STATUS_NA
 from grm.constants import (
     ALERT_CHOICE,
@@ -184,6 +184,18 @@ class AdministrativeRegion(models.Model):
         else:
             belongs = self.id in parent.get_descendant_ids()
         return belongs
+
+    def get_ancestor_at_level(self, administrative_level_id):
+        """
+        Return this region if it is at the given administrative level, otherwise its closest
+        ancestor at that level, or ``None`` when the region is above that level.
+        """
+        region = self
+        while region is not None:
+            if region.administrative_level_id == administrative_level_id:
+                return region
+            region = region.parent
+        return None
 
     def get_base_region_id(self):
         base_region_id = self.id
@@ -776,61 +788,42 @@ class Issue(models.Model):
             Cdata.objects.filter(key=key).delete()
 
     def get_assignee(self):
+        """
+        Return the committee account (a ``User``) that must handle this issue, or ``None``.
+
+        Business rules (COSO MGP):
+          - A committee account is a ``GovernmentWorker``: one account per (department, region),
+            e.g. the CCGP of a village, the CLGP of a commune, the national committee at country level.
+          - The issue category says which committee handles it, through its ``assigned_department``
+            (a department at an administrative level) configured in the wizard:
+              * non-sensitive category -> village committee (CCGP at village level);
+              * sensitive category     -> national committee (assigned at country level);
+              * any other level is honoured the same way (e.g. commune for customs-related issues).
+          - The target region is the issue region itself or its ancestor at that level.
+          - Failsafe: if that committee has no account, climb the region tree and take the first
+            committee account found on a level that hosts committees (levels without a committee,
+            such as arrondissement or département in Benin, are skipped). The climb only goes up
+            from the target, so a sensitive issue is never routed down to a village committee.
+        """
         region = self.administrative_region
-        category = self.category
-        department = category.assigned_department.department
-        assignee = None
-        if category.redirection_protocol:
-            facilitator = Facilitator.objects.filter(administrative_region=region, village_secretary=1).first()
-            if facilitator:
-                assignee = facilitator.user
+        target = self.category.assigned_department
 
-            if not assignee:
-                related_workers = set(
-                    GovernmentWorker.objects.filter(department=department, administrative_region=region).values_list(
-                        "user", flat=True
-                    )
-                )
-
-                assignees = (
-                    User.objects.filter(assigned_issues__category__assigned_department__department=department)
-                    .annotate(issue_count=Count('assigned_issues', distinct=True))
-                    .order_by('issue_count')
-                    .distinct()
-                )
-
-                department_workers_with_assignment = {worker.id for worker in assignees}
-                department_workers_without_assignment = related_workers - department_workers_with_assignment
-
-                if department_workers_without_assignment:
-                    worker_id = list(department_workers_without_assignment)[0]
-                    assignee = GovernmentWorker.objects.get(user=worker_id)
-                else:
-                    if assignees and related_workers:
-                        for worker in assignees:
-                            if worker.id in related_workers:
-                                assignee = worker
-                                break
-                    elif related_workers:
-                        assignee = GovernmentWorker.objects.filter(
-                            department=department, administrative_region=region
-                        ).first()
+        target_region = region.get_ancestor_at_level(target.administrative_level_id)
+        if target_region is not None:
+            worker = (
+                GovernmentWorker.objects.filter(department_id=target.department_id, administrative_region=target_region)
+                .select_related("user")
+                .first()
+            )
+            if worker:
+                return worker.user
+            start = target_region.parent
         else:
-            print("not supposed to be here")
-            assignee = department.head
-        if not assignee:
-            print(" definitively not supposed to be here")
-            # TODO: ask about this repeated case
-            facilitator = Facilitator.objects.filter(administrative_region=region, village_secretary=1).first()
-            if facilitator:
-                assignee = facilitator.user
+            # The issue is located above the target level (e.g. reported at commune level
+            # for a village-level category): look from the issue region itself.
+            start = region
 
-        if category.confidentiality_level == "Confidential" and category.redirection_protocol == 0:
-            facilitator = Facilitator.objects.filter(administrative_region=1, village_secretary=1).first()
-            if facilitator:
-                assignee = facilitator.user
-                print("confidential assignee ok")
-        return assignee
+        return find_committee_account_upwards(start)
 
     def get_assignee_to_escalate(self, region):
         department = self.category.assigned_department.department
@@ -858,6 +851,31 @@ class Issue(models.Model):
             return assignee
         else:
             return None
+
+
+def find_committee_account_upwards(region):
+    """
+    Walk up from ``region`` (inclusive) and return the user of the first committee account found.
+
+    Only levels hosting a committee are considered, i.e. levels that have at least one department
+    attached in the wizard (``IssueDepartmentAdministrativeLevel``). In Benin the chain is
+    village (CCGP) -> commune (CLGP) -> country (national committee); arrondissement and
+    département have no department attached and are therefore skipped.
+    """
+    while region is not None:
+        department_ids = IssueDepartmentAdministrativeLevel.objects.filter(
+            administrative_level_id=region.administrative_level_id
+        ).values("department_id")
+        worker = (
+            GovernmentWorker.objects.filter(department_id__in=department_ids, administrative_region=region)
+            .select_related("user")
+            .order_by("id")
+            .first()
+        )
+        if worker:
+            return worker.user
+        region = region.parent
+    return None
 
 
 class Comment(models.Model):

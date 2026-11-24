@@ -75,6 +75,29 @@ class UserUpdateViewTest(DashboardTestCase):
         worker = GovernmentWorker.objects.get(user=self.case_manager_user)
         assert worker.department == new_department
 
+    def test_cannot_move_account_onto_an_existing_committee(self):
+        """One account per committee: moving to a (department, region) already taken is refused."""
+        other_department = IssueDepartmentFactory()
+        GovernmentWorker.objects.create(
+            user=UserFactory(), department=other_department, administrative_region=self.root_region
+        )
+        url = reverse("dashboard:user_management:update", kwargs={"pk": self.case_manager_user.id})
+        data = {
+            "first_name": self.case_manager_user.first_name,
+            "last_name": self.case_manager_user.last_name,
+            "email": self.case_manager_user.email,
+            "phone_number": self.case_manager_user.phone_number,
+            "administrative_region": self.root_region.id,
+            "department": other_department.id,
+            "is_department_head": False,
+        }
+
+        resp = self.post(url, data, user=self.manager)
+        assert resp.status_code == 200  # Form validation fails, stays on page
+
+        worker = GovernmentWorker.objects.get(user=self.case_manager_user)
+        assert worker.department == self.department  # Unchanged
+
     def test_assign_as_department_head(self):
         """Should successfully assign user as department head"""
         url = reverse("dashboard:user_management:update", kwargs={"pk": self.case_manager_user.id})

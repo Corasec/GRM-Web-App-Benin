@@ -128,6 +128,34 @@ class CreateUserViewTest(DashboardTestCase):
         assert "errors" in json_data
         assert "confirm_password" in json_data["errors"]
 
+    def test_cannot_create_second_account_for_same_committee(self):
+        """One account per committee: same department + same region is refused."""
+        from authentication.models import GovernmentWorker
+
+        GovernmentWorker.objects.create(
+            user=UserFactory(), department=self.department, administrative_region=self.root_region
+        )
+        data = {
+            "user_type": CASE_MANAGER_CHOICE,
+            "first_name": "Jane",
+            "last_name": "Smith",
+            "username": "janesmith",
+            "email": "jane@example.com",
+            "phone_number": "0987654321",
+            "password": "SecurePass123!",
+            "confirm_password": "SecurePass123!",
+            "department": self.department.id,
+            "case_manager_administrative_region": self.root_region.id,
+            "is_department_head": False,
+        }
+
+        resp = self.post(self.url, data, user=self.manager, ajax=True)
+        assert resp.status_code == 200
+        json_data = resp.json()
+        assert json_data["success"] is False
+        assert "case_manager_administrative_region" in json_data["errors"]
+        assert GovernmentWorker.objects.filter(department=self.department).count() == 1
+
     def test_create_user_with_duplicate_email(self):
         """Should fail when email already exists"""
         UserFactory(email="duplicate@example.com")
