@@ -194,3 +194,23 @@ class IssueAttachmentCreateAPIViewTest(APITestCase):
 
         response = self.client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_attachment_description_is_saved(self):
+        """The mobile app describes which action a file documents (step, rejection, resolution, escalation)."""
+        self.authenticate_with_token()
+        data = {**self.valid_data, 'description': 'Step: meeting with the village chief'}
+
+        response = self.client.post(self.url, data, format='multipart')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        attachment = IssueAttachment.objects.get(issue=self.issue)
+        self.assertEqual(attachment.description, 'Step: meeting with the village chief')
+        self.assertEqual(response.data['data']['description'], 'Step: meeting with the village chief')
+
+    def test_attachment_description_is_optional(self):
+        self.authenticate_with_token()
+
+        response = self.client.post(self.url, self.valid_data, format='multipart')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(IssueAttachment.objects.get(issue=self.issue).description, '')
