@@ -1,14 +1,6 @@
-## Build & push the docker image
+# Docker deployment
 
-```bash
-cd src/
-sudo docker build . -t cosobenin/grm-app:v.1.0.0
-sudo docker push cosobenin/grm-app:v.1.0.0
-```
+Production stack for the VM: `app/docker-compose.yaml` (Django + Celery worker / beat + PostgreSQL +
+Redis + nginx), `app/nginx/default.conf` and `app/.env.example`.
 
-## Deploying the app
-
-
-ssl_doc: https://pentacent.medium.com/nginx-and-lets-encrypt-with-docker-in-less-than-5-minutes-b4b8a60d3a71
-
-
+Everything to build, copy and run is described in [DEPLOY.md](../DEPLOY.md) at the repository root.
