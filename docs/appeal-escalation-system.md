@@ -58,88 +58,75 @@ flowchart TD
 
 ## 2. The Escalation System
 
-**What is it?** The process by which a case is reassigned to an officer at a **higher administrative level** (or a lower one, when de-escalated), within the same thematic department (Health, Education, and so on), when it is not being resolved in time.
+**What is it?** The process by which a case is handed to the **committee of the next level** when it is not resolved in time or when the committee in charge cannot resolve it. The chain follows the COSO grievance committees:
 
-There are two ways to escalate: **automatic** and **manual**. Both use the same underlying mechanism — walking up or down the tree of administrative regions to find the right officer — but they are triggered differently.
+**CCGP (village) → CLGP (commune) → national committee (country)**
+
+Levels without a committee (arrondissement and département in Benin) are skipped. A committee is a department attached to an administrative level in the setup wizard, with **one account per committee** (its secretary). The routing code is in [`issues/models.py`](../src/issues/models.py) (`get_assignee_to_escalate`, `get_assignee_to_de_escalate`) and every escalation goes through [`issues/escalation.py`](../src/issues/escalation.py).
+
+There are three ways to escalate — **automatic**, **voluntary from the mobile app** and **manual from the dashboard** — and they all behave the same way: the case is reassigned at once, the escalation date is recorded, a comment is added to the history (who, to which committee, why) and the citizen is notified if they asked for direct alerts. Resolved and rejected cases are never escalated, and a case already handled by the national committee cannot go higher.
 
 ### 2.1 Automatic escalation
 
-Two scheduled background jobs do the work:
+Two scheduled background jobs (Celery) do the work:
 
-1. **Flagging (once a day):** reviews every open case (not in a final or rejected status) and computes how many days it has spent in its current status. If that exceeds the "days to escalate" threshold configured for that status (set per status in the setup wizard), the case is flagged as ready to escalate.
+1. **Flagging (once a day):** reviews every open case (not in a final or rejected status) and computes how many days have passed since the **start of the current period** — the latest of the moment the case entered its status and its last escalation. If that exceeds the "days to escalate" threshold configured for the status (setup wizard), the case is flagged. Counting from the last escalation gives each committee a full period: an escalated case no longer climbs one level per day up to the top.
+2. **Execution (every 5 minutes):** reassigns every flagged case to the next committee and adds an automatic comment explaining that the processing time was exceeded. Each case is processed independently: an error on one case is logged and does not block the others. A case already at the national committee keeps its flag and is reported as "not escalable".
 
-2. **Execution (every 5 minutes):** takes every flagged case and looks for an officer at the **next administrative level up**, within the same department. If it finds one, it reassigns the case, records the escalation date, and leaves an automatic comment explaining that the case was escalated for exceeding its processing time. If nobody is found at that level, it keeps climbing level by level up to the root (country level); if still nobody is found, the case stays pending and is retried on the next run.
+> Thresholds are still configured **per status, in calendar days**. Per-level deadlines in working days (3 / 3 / 5) and the 30-day rule for GBV cases are backlog item 9.
 
-**Important:** as with appeals, the case's original location never changes — only who is responsible for it. And **the citizen receives no notification when their case is escalated**, whether automatically or manually.
+### 2.2 Voluntary escalation (mobile app)
 
-### 2.2 Manual escalation
+At any time while working on a case, the committee in charge can escalate it to the next level, **with a mandatory reason**. The escalation is executed immediately by the server: the committee loses the case right away. If there is no higher committee, the request is refused with a clear message.
 
-A GRM Manager or authorised PIU staff member can escalate or de-escalate a case by hand from the internal dashboard, with a button for each action:
+### 2.3 Manual escalation and de-escalation (dashboard)
 
-- **Escalate:** finds the officer at the next level up (same department) and reassigns the case. Blocked if the case is already in a final/resolved status.
-- **De-escalate:** the reverse — finds an officer at a lower level in the region tree and reassigns the case downwards.
+A GRM Manager or authorised PIU staff member can escalate or de-escalate a case by hand with the buttons of the case page:
 
-**Note:** de-escalation exists **only** as a manual action. No automatic process ever moves a case back down a level.
+- **Escalate:** same as above, to the next committee up.
+- **De-escalate:** sends the case back **down towards the place where the problem occurred** — national committee → CLGP of the case's commune → CCGP of the case's village. It never goes to another commune or village. De-escalation exists only as a manual action and does not notify the citizen.
 
-### 2.3 Escalation flow diagram
+### 2.4 Escalation flow diagram
 
 ```mermaid
 %%{init: {"flowchart": {"wrappingWidth": 340, "nodeSpacing": 40, "rankSpacing": 45, "curve": "basis"}} }%%
 flowchart TD
-    subgraph AUTO["Automatic path · overdue by time"]
-        A1["Open, unresolved case"] --> A2{"Past the day<br/>threshold?"}
-        A2 -->|No| A9(["Nothing changes"])
-        A2 -->|Yes| A3["Flagged to escalate<br/>(daily review)"]
-        A3 --> A4["Runs every 5 minutes"]
-    end
-
-    subgraph MAN["Manual path · internal GRM dashboard"]
-        B1["GRM Manager or PIU<br/>clicks Escalate"] --> B2{"Is the case<br/>already resolved?"}
-        B2 -->|Yes| B3["Blocked"]
-        B2 -->|No| B4["Immediate escalation"]
-    end
-
-    A4 --> C1["Find an officer of the same department<br/>one administrative level up"]
-    B4 --> C1
-    C1 --> C2{"Found?"}
-    C2 -->|No: climb another level| C1
-    C2 -->|No levels left| C8["Stays pending<br/>and is retried"]
-    C2 -->|Yes| C4["Reassign the case<br/>and record the escalation date"]
-    C4 --> C6["If automatic, an explanatory<br/>comment is added"]
+    A1["Daily review: period over<br/>(since status or last escalation)"] --> C1
+    B1["Committee escalates from the app<br/>(reason required)"] --> C1
+    D1["GRM Manager / PIU clicks Escalate"] --> C1
+    C1{"Case resolved<br/>or rejected?"}
+    C1 -->|Yes| X1["Refused"]
+    C1 -->|No| C2{"Committee above?<br/>CCGP → CLGP → national"}
+    C2 -->|No: national committee| X2["Stays with the national committee"]
+    C2 -->|Yes| C3["Reassigned at once<br/>escalation date recorded"]
+    C3 --> C4["History comment: who, to whom, why"]
+    C4 --> C5["Citizen notified (direct alerts only)"]
 
     classDef default fill:#eceff4,stroke:#7d8896,color:#1c2622
     classDef blocked fill:#f6dedb,stroke:#b3423a,color:#3a1613
     classDef success fill:#dcecdf,stroke:#2e7d4f,color:#12291b
-    classDef waiting fill:#f7ead6,stroke:#b8791f,color:#3a2d17
-    class B3,C8 blocked
-    class C4 success
-    class C6 waiting
-    style AUTO fill:#f7f8f6,stroke:#c2cac4,color:#3f4a44
-    style MAN fill:#f7f8f6,stroke:#c2cac4,color:#3f4a44
+    class X1,X2 blocked
+    class C3 success
 ```
 
-**How to read it:** there are two entry points into the same machinery — the clock (automatic) or a human click (manual) — but both end at the same step: finding, within the same thematic department, the officer one administrative level up. The only visible difference after reassignment is that automatic escalation leaves a comment explaining why it happened, while manual escalation leaves none. De-escalation follows the same logic in the opposite direction and exists only on the manual path.
-
-### 2.4 Appeals vs. Escalation, side by side
+### 2.5 Appeals vs. Escalation, side by side
 
 | | Appeal | Escalation |
 |---|---|---|
-| Who triggers it | Only the officer assigned to the case | The clock (automatic) or a GRM Manager / PIU (manual) |
-| Where it reassigns to | A fixed department, configured per issue category | The next administrative level (up or down), same department |
-| Does it follow the territory? | No — jumps straight to a fixed point | Yes — one level at a time |
-| Is there a limit? | No counter, no cap | No cap on the number of times, but it runs out at the top level (country) |
-| Is the citizen notified? | Yes, when it is raised | No, in neither case |
-| What audit trail is left? | Only the current state (yes/no) and a free-text reason | Only the date of the last escalation, plus a comment if it was automatic |
+| Who triggers it | Only the officer assigned to the case | The clock (automatic), the committee in charge (app) or a GRM Manager / PIU (dashboard) |
+| Where it reassigns to | A fixed department, configured per issue category | The committee of the next level (CCGP → CLGP → national) |
+| Does it follow the territory? | No — jumps straight to a fixed point | Yes — along the committees above the case location |
+| Is there a limit? | No counter, no cap | Stops at the national committee |
+| Is the citizen notified? | Yes, when it is raised | Yes, on each escalation (direct alerts only) |
+| What audit trail is left? | Only the current state (yes/no) and a free-text reason | A history comment for each escalation (who, to which committee, reason) and the date of the last one |
 
 ---
 
 ## 3. Administrative levels and how a case moves between them
 
-Administrative regions are organised as a tree — for Benin, **Country → Departments → Communes** — with a single root level (the country).
+Administrative regions are organised as a tree — for Benin, **Country → Département → Commune → Arrondissement → Village** — with a single root level (the country). Grievance committees sit on three of these levels only: village (CCGP), commune (CLGP) and country (national committee).
 
-When a case moves "up" or "down" a level through escalation, what actually changes is **who the responsible officer is**, not where the case is. The system looks, within the same thematic department (Health, say), for the officer assigned to the parent administrative level (to move up) or to a child level (to move down) of the region where the current handler sits.
-
-The real location where the problem occurred — the case's region — is set once, when the case is created, and is **never modified** by an appeal or an escalation. It is a fixed historical fact about the case.
+When a case moves "up" or "down" through escalation, what changes is **which committee is responsible**, not where the case is. The real location where the problem occurred — the case's region — is set once, when the case is created, and is **never modified** by an appeal or an escalation.
 
 ---
 
@@ -147,5 +134,5 @@ The real location where the problem occurred — the case's region — is set on
 
 - **Appeals depend on the assigned officer, not the citizen.** If the expectation is that citizens can appeal directly, that capability does not exist in the system today.
 - **There is no appeal limit.** If a cap is needed (for example "at most 2 appeals per case", or "appeals only go up to country level"), it has to be built — it does not exist today.
-- **The automatic jobs (escalation and appeal reassignment) depend on a background process (Celery) that must run separately from the website.** If that process is not running in a given environment, automatic escalation and appeal reassignment simply do not happen, even though the code is there.
-- **The citizen is never notified when their case is escalated** — only when it is created, changes status, is assigned, or is appealed.
+- **The automatic jobs (escalation flagging and execution, appeal reassignment) depend on a background process (Celery) that must run separately from the website.** If that process is not running in a given environment, automatic escalation and appeal reassignment simply do not happen, even though the code is there.
+- **The citizen is notified of each escalation** (if they asked for direct alerts), in addition to creation, status changes, assignment and appeal. See [notifications.md](notifications.md).

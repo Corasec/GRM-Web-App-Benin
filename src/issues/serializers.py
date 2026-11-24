@@ -11,12 +11,16 @@ from grm.constants import (
     CONTACT_INFO_NO_EMAIL_ERROR_MESSAGE,
     CONTACT_MEDIUM_ERROR_MESSAGE,
     EMAIL_CHOICE,
+    ESCALATION_CLOSED_ISSUE_MESSAGE,
+    ESCALATION_NO_HIGHER_COMMITTEE_MESSAGE,
+    ESCALATION_REASON_REQUIRED_MESSAGE,
     ISSUE_UPDATE_APPEAL_STATUS_ERROR_MESSAGE,
     ISSUE_UPDATE_ESCALATE_ERROR_MESSAGE,
     ISSUE_UPDATE_RATING_ERROR_MESSAGE,
     ISSUE_UPDATE_STATUS_ERROR_MESSAGE,
 )
 from grm.utils import email_is_valid
+from issues.escalation import can_be_escalated
 from issues.models import (
     AdministrativeRegion,
     Citizen,
@@ -437,6 +441,16 @@ class IssueUpdateSerializer(serializers.ModelSerializer):
         # Check escalate_flag field restriction
         if 'escalate_flag' in attrs and user.id != getattr(issue, "assignee_id", None):
             raise MethodNotAllowed(method='PATCH', detail=ISSUE_UPDATE_ESCALATE_ERROR_MESSAGE)
+
+        # Escalation requested by the committee: it is executed right away by the view
+        # (the committee loses the issue), so check it can actually happen.
+        if attrs.get('escalate_flag') is True and not issue.escalate_flag:
+            if not (attrs.get('escalation_reason') or '').strip():
+                raise serializers.ValidationError({"escalation_reason": ESCALATION_REASON_REQUIRED_MESSAGE})
+            if not can_be_escalated(issue):
+                raise serializers.ValidationError({"escalate_flag": ESCALATION_CLOSED_ISSUE_MESSAGE})
+            if issue.get_assignee_to_escalate() is None:
+                raise serializers.ValidationError({"escalate_flag": ESCALATION_NO_HIGHER_COMMITTEE_MESSAGE})
 
         # Check status field restriction
         if 'status' in attrs and user.id != getattr(issue, "assignee_id", None):

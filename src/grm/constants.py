@@ -16,6 +16,7 @@ NOTIFICATION_TYPES = {
     'status_changed',
     'appealed',
     'assigned',
+    'escalated',
 }
 
 EMAIL_CHOICE = "email"
@@ -121,6 +122,9 @@ ISSUE_UPDATE_STATUS_ERROR_MESSAGE = _('Only assignees can update the status fiel
 ISSUE_UPDATE_APPEAL_STATUS_ERROR_MESSAGE = _('Only assignees can update the appeal_status field.')
 ISSUE_UPDATE_RATING_ERROR_MESSAGE = _('Only reporters can update the rating field.')
 ISSUE_UPDATE_ESCALATE_ERROR_MESSAGE = _('Only assignees can update the escalate_flag field.')
+ESCALATION_REASON_REQUIRED_MESSAGE = _('A reason is required to escalate the issue.')
+ESCALATION_CLOSED_ISSUE_MESSAGE = _('A resolved or rejected issue cannot be escalated.')
+ESCALATION_NO_HIGHER_COMMITTEE_MESSAGE = _('There is no higher committee to escalate this issue to.')
 ISSUE_RETRIEVE_ERROR_MESSAGE = _('An error occurred while retrieving the issue.')
 ISSUE_LIST_ERROR_MESSAGE = _("Invalid datetime format. Use ISO 8601 (e.g. 2021-03-23T10:30:45Z).")
 COMMENT_CREATE_SUCCESS_MESSAGE = _('Comment added successfully.')

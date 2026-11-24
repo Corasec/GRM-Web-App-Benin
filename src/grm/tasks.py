@@ -5,13 +5,14 @@ from celery.schedules import crontab
 from django.conf import settings
 from django.core.management import call_command
 from django.db.models import F, IntegerField, OuterRef, Q, Subquery
-from django.db.models.functions import Extract, Now
+from django.db.models.functions import Extract, Greatest, Now
 from django.db.models.functions.comparison import Cast
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from dashboard.constants import MONTHLY_CHOICE, QUARTERLY_CHOICE, WEEKLY_CHOICE
 from grm.celery_app import app
+from issues.escalation import escalate_issue
 from issues.models import Comment, Issue, IssueStatusChange
 
 COUCHDB_GRM_DATABASE = settings.COUCHDB_GRM_DATABASE
@@ -122,36 +123,26 @@ def check_issues():
 
 @app.task
 def escalate_issues():
-    issues = Issue.objects.filter(confirmed=True, escalate_flag=True, assignee__isnull=False)
-    result = {
-        "issues_updated": [],
-        "scale_is_not_available": [],
-    }
-    updated_issues = 0
-    now = timezone.now()
+    """
+    Escalate the issues flagged by ``mark_issues_to_be_escalated`` to the next committee
+    (CCGP -> CLGP -> national). Each issue is isolated: an error is logged and the others go on.
+    Issues already handled by the top committee keep their flag and are reported as not escalable.
+    """
+    issues = Issue.objects.filter(confirmed=True, escalate_flag=True, assignee__isnull=False).select_related(
+        "status", "administrative_region", "assignee"
+    )
+    result = {"issues_updated": [], "scale_is_not_available": [], "errors": []}
     for issue in issues:
-        issues_updated = False
-        assignee = issue.get_assignee_to_escalate(issue.assignee.governmentworker.administrative_region)
-        if assignee:
-            issue.assignee = assignee
-            issue.escalate_flag = False
-            issue.escalated_date = now
-            result["issues_updated"].append(issue.id)
-            issues_updated = True
-            Comment.objects.create(
-                user=None,  # take None like user system
-                comment=_("The complaint has been escalated automatically because the processing time has passed."),
-                issue=issue,
-            )
+        try:
+            if escalate_issue(issue, automatic=True):
+                result["issues_updated"].append(issue.id)
+            else:
+                result["scale_is_not_available"].append(issue.id)
+        except Exception:
+            logger.exception("escalate_issues: cannot escalate issue %s", issue.id)
+            result["errors"].append(issue.id)
 
-        else:
-            result["scale_is_not_available"].append(issue.id)
-
-        if issues_updated:
-            issue.save()
-            updated_issues += 1
-
-    result["updated_issues"] = updated_issues
+    result["updated_issues"] = len(result["issues_updated"])
     return result
 
 
@@ -191,7 +182,9 @@ def mark_issues_to_be_escalated():
 
     # Annotate issues with:
     # - entered_at of open status
-    # - days_in_status computed in SQL
+    # - the start of the current period: the latest of entering the status and the last escalation,
+    #   so that an escalated issue gets a full period at its new committee
+    # - days computed in SQL (PostgreSQL GREATEST ignores NULL escalated_date)
     issues = (
         Issue.objects.filter(
             confirmed=True,
@@ -202,7 +195,8 @@ def mark_issues_to_be_escalated():
         )
         .annotate(
             entered_at=Subquery(open_status_change),
-            seconds_in_status=Extract(Now() - F("entered_at"), "epoch"),
+            period_start=Greatest(F("entered_at"), F("escalated_date")),
+            seconds_in_status=Extract(Now() - F("period_start"), "epoch"),
             days_in_status=Cast(F("seconds_in_status") / 86400.0, IntegerField()),
         )
         .filter(days_in_status__gt=F("status__threshold_days_to_escalate"))
