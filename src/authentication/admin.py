@@ -96,6 +96,7 @@ class GovernmentWorkerAdmin(admin.ModelAdmin):
 class FacilitatorAdmin(admin.ModelAdmin):
     fields = (
         "user",
+        "role",
         "administrative_region",
         "villages",
     )
@@ -107,8 +108,10 @@ class FacilitatorAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "user",
+        "role",
         "administrative_region",
     )
+    list_filter = ("role",)
     search_fields = (
         "id",
         "user__email",

@@ -3070,3 +3070,11 @@ msgstr "Délai du comité"
 #: issues/serializers.py
 msgid "This tracking code is already used by another issue."
 msgstr "Ce code de suivi est déjà utilisé par une autre plainte."
+
+#: authentication/models.py
+msgid "Community facilitator (FC)"
+msgstr "Facilitateur communautaire (FC)"
+
+#: authentication/models.py
+msgid "Communal supervisor (SC)"
+msgstr "Superviseur communal (SC)"

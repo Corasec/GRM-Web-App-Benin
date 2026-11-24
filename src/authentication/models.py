@@ -190,6 +190,14 @@ class Facilitator(models.Model):
         related_name="covering_facilitators",
         verbose_name=_("Covered villages"),
     )
+    # Field staff role: community facilitator (villages) or communal supervisor (arrondissements)
+    ROLE_COMMUNITY_FACILITATOR = "FC"
+    ROLE_COMMUNAL_SUPERVISOR = "SC"
+    ROLE_CHOICES = [
+        (ROLE_COMMUNITY_FACILITATOR, _("Community facilitator (FC)")),
+        (ROLE_COMMUNAL_SUPERVISOR, _("Communal supervisor (SC)")),
+    ]
+    role = models.CharField(max_length=2, choices=ROLE_CHOICES, blank=True, default="", verbose_name=_("Role"))
     unique_region = models.BooleanField(null=True)
     # Legacy flag: village secretaries are now committee accounts (GovernmentWorker).
     # No longer used for routing; kept for backward compatibility with old app versions.

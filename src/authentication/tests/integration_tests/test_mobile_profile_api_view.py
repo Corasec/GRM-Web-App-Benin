@@ -133,3 +133,15 @@ class MobileProfileAPIViewTest(APITestCase):
         assert response.data["user"]["name"] == user.name
         assert response.data["user"]["phone"] == "+22990000000"
         assert response.data["user"]["photo"] is None
+
+    def test_field_role_is_returned_for_field_staff(self):
+        facilitator = FacilitatorFactory(administrative_region=self.arr_1, role="SC")
+
+        response = self._get(facilitator.user)
+
+        assert response.data["field_role"] == "SC"
+
+    def test_committee_has_no_field_role(self):
+        response = self._get(self._committee("CCGP", self.village_1))
+
+        assert response.data["field_role"] == ""
