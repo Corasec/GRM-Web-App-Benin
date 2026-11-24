@@ -12,8 +12,8 @@ from grm.constants import (
     CONTACT_MEDIUM_ERROR_MESSAGE,
     EMAIL_CHOICE,
     ESCALATION_CLOSED_ISSUE_MESSAGE,
-    ESCALATION_NOT_ACCEPTED_MESSAGE,
     ESCALATION_NO_HIGHER_COMMITTEE_MESSAGE,
+    ESCALATION_NOT_ACCEPTED_MESSAGE,
     ESCALATION_REASON_REQUIRED_MESSAGE,
     ISSUE_CLOSED_ERROR_MESSAGE,
     ISSUE_UPDATE_APPEAL_STATUS_ERROR_MESSAGE,
@@ -22,6 +22,12 @@ from grm.constants import (
     ISSUE_UPDATE_STATUS_ERROR_MESSAGE,
 )
 from grm.utils import email_is_valid
+from issues.confidentiality import (
+    ANONYMIZED_VALUE,
+    can_see_complainant_in_app,
+    get_citizen_name,
+    get_contact_information,
+)
 from issues.escalation import can_be_escalated
 from issues.models import (
     AdministrativeRegion,
@@ -161,6 +167,32 @@ class IssueSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
+    def to_representation(self, instance):
+        """
+        Add the complainant (citizen) and the contact. The committee in charge and the reporter see
+        the real name and contact; anybody else gets "*".
+        """
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        visible = can_see_complainant_in_app(getattr(request, 'user', None), instance)
+        citizen = instance.citizen
+        data['citizen'] = (
+            {
+                'id': citizen.id,
+                'name': get_citizen_name(instance) if visible else ANONYMIZED_VALUE,
+                'type': citizen.type,
+                'gender': citizen.gender,
+                'age_group': citizen.age_group_id,
+                'group': citizen.group_id,
+                'group_2': citizen.group_2_id,
+            }
+            if citizen
+            else None
+        )
+        contact = get_contact_information(instance) if visible else ''
+        data['contact_information'] = contact if contact else (ANONYMIZED_VALUE if instance.contact_information else '')
+        return data
+
     def get_intake_date(self, obj):
         dt = getattr(obj, 'intake_date', None)
         if not dt:
@@ -195,6 +227,8 @@ class IssueSerializer(serializers.ModelSerializer):
             'issue_type',
             'created_date',
             'updated_date',
+            'contact_medium',
+            'contact_method',
         ]
         read_only_fields = [
             'id',
@@ -388,6 +422,9 @@ class IssueCreateSerializer(serializers.ModelSerializer):
         )
         issue.save()
         issue.anonymize_issue_data()
+        # anonymize_issue_data() replaces the contact by "*" on the instance: persist it right away,
+        # the clear contact must never stay in the issue table.
+        issue.save(update_fields=["contact_information"])
         return issue
 
     def validate(self, data):

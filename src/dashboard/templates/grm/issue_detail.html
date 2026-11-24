@@ -109,17 +109,27 @@
 									</label>
 								</div>
 								<div class="col-md-9">
-									{% if confidential %}
-										{% translate 'Confidential' %}
-									{% else %}
-										<div id="citizen">
-											*****
+									<div id="citizen">
+										*****
+										{% if can_reveal_sensitive_data %}
 											<i class="fas fa-eye pull-right link show-data"
 											   title={% translate "Show sensitive data" %}></i>
-										</div>
-									{% endif %}
+										{% endif %}
+									</div>
 								</div>
 							</div>
+							{% if obj.contact_information %}
+								<div class="row mr-2 mb-2">
+									<div class="col-md-3">
+										<label class="label-align">
+											{% translate 'Contact' %}
+										</label>
+									</div>
+									<div class="col-md-9">
+										<div id="contact">*****</div>
+									</div>
+								</div>
+							{% endif %}
 						{% endif %}
 						{% if obj.citizen.age_group %}
 							<div class="row mr-2 mb-2">
@@ -501,8 +511,9 @@
                         showPopupMessage(response);
                     }
                     let data = response.data;
-                    if (data && data.citizen) {
-                        $("#citizen").html(data.citizen);
+                    if (data) {
+                        $("#citizen").text(data.citizen || "-");
+                        $("#contact").text(data.contact || "-");
                     }
                     $('#checkPasswordModal').modal('hide')
                 },
