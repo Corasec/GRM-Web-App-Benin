@@ -1,7 +1,6 @@
 import random
 from datetime import datetime, timedelta
 
-import cryptocode
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -13,7 +12,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
 
-from authentication.models import Cdata, GovernmentWorker, Pdata
+from authentication.models import GovernmentWorker
 from common.utils.forms import FileForm
 from dashboard.grm.forms import (
     IssueCommentForm,
@@ -40,6 +39,7 @@ from grm.constants import (
 )
 from grm.notifications import send_issue_notification
 from grm.utils import get_issue_select_options_choices
+from issues.confidentiality import can_reveal_in_dashboard, get_citizen_name, get_contact_information
 from issues.escalation import can_be_escalated, de_escalate_issue, escalate_issue
 from issues.models import (
     AdministrativeRegion,
@@ -702,6 +702,7 @@ class IssueDetailsFormView(
         context["comments"] = self.obj.comments.select_related('user')
         citizen_type = self.obj.citizen.type if self.obj.citizen else None
         # Handle case where assignee might be None
+        context["can_reveal_sensitive_data"] = can_reveal_in_dashboard(user)
         context["confidential"] = (
             self.obj.assignee and self.obj.assignee.id != user.id and citizen_type == CONFIDENTIAL_CHOICE
         )
@@ -1013,14 +1014,14 @@ class GetAncestorAdministrativeLevelsView(LoginRequiredAndAJAXRequestMixin, gene
 
 class GetSensitiveIssueDataView(LoginRequiredAndAJAXRequestMixin, generic.View):
     """
-    Get sensitive/confidential data for an issue.
+    Reveal the complainant's name and contact on the dashboard.
 
-    Permissions: Only Case Manager AND must be assigned to the issue.
+    Permissions: superusers and the national committee account only, on any issue, after
+    re-entering their password (other dashboard accounts never see them).
     """
 
     def dispatch(self, request, *args, **kwargs):
-        # Only Case Managers can access sensitive data
-        if not hasattr(request.user, 'governmentworker'):
+        if not can_reveal_in_dashboard(request.user):
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 
@@ -1030,22 +1031,13 @@ class GetSensitiveIssueDataView(LoginRequiredAndAJAXRequestMixin, generic.View):
         }
 
         if self.request.user.check_password(request.POST.get("password")):
-            issue_id = request.POST.get("id")
-
-            # Verify user is assignee of the issue
-            issue = Issue.objects.filter(id=issue_id).first()
-            if not issue or issue.assignee_id != request.user.id:
-                raise PermissionDenied
-
-            citizen = Pdata.objects.get(key=issue_id) if Pdata.objects.filter(key=issue_id).exists() else None
-            citizen = cryptocode.decrypt(citizen.data, issue_id) if citizen else None
-
-            contact = Cdata.objects.get(key=issue_id) if Cdata.objects.filter(key=issue_id).exists() else None
-            contact = cryptocode.decrypt(contact.data, issue_id) if contact else None
+            issue = Issue.objects.select_related("citizen").filter(id=request.POST.get("id")).first()
+            if not issue:
+                raise Http404
 
             context["data"] = {
-                "citizen": citizen,
-                "contact": contact,
+                "citizen": get_citizen_name(issue) or None,
+                "contact": get_contact_information(issue) or None,
             }
 
         else:

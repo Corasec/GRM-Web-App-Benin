@@ -758,7 +758,7 @@ class AssigneeIssueListAPIView(ListAPIView):
 
     def get_queryset(self):
         qs = Issue.objects.select_related(
-            'status', 'category', 'issue_type', 'administrative_region', 'reporter', 'assignee'
+            'status', 'category', 'issue_type', 'administrative_region', 'reporter', 'assignee', 'citizen'
         ).filter(assignee=self.request.user, confirmed=True)
         created_date = self.request.query_params.get("created_date")
         if created_date:
@@ -1046,7 +1046,7 @@ class ReporterIssueListAPIView(ListAPIView):
 
     def get_queryset(self):
         qs = Issue.objects.select_related(
-            'status', 'category', 'issue_type', 'administrative_region', 'reporter', 'assignee'
+            'status', 'category', 'issue_type', 'administrative_region', 'reporter', 'assignee', 'citizen'
         ).filter(reporter=self.request.user, confirmed=True)
         created_date = self.request.query_params.get("created_date")
         if created_date:

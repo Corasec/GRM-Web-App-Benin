@@ -17,6 +17,7 @@ from grm.constants import (
     FACILITATOR_CHOICE,
     ISSUE_CREATE_ERROR_MESSAGE,
     ISSUE_CREATE_SUCCESS_MESSAGE,
+    PHONE_CHOICE,
 )
 from grm.utils import reset_sequences
 from issues.factories import (
@@ -422,3 +423,18 @@ class IssueCreateAPIViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         issue = Issue.objects.get()
         self.assertIn(issue.description, (None, ""))
+
+    def test_contact_is_never_stored_in_clear(self):
+        """Regression: the anonymised contact was not saved, it stayed in clear until check_issues ran."""
+        self.client.force_authenticate(user=self.reporter_user)
+        data = self.__get_valid_data()
+        data.update(
+            {"contact_medium": ALERT_CHOICE, "contact_method": PHONE_CHOICE, "contact_information": "0197000000"}
+        )
+
+        response = self.client.post(self.url, data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        issue = Issue.objects.select_related("citizen").get()
+        self.assertEqual(issue.contact_information, "*")
+        self.assertEqual(issue.citizen.name, "*")
