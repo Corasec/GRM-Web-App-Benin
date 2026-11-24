@@ -7,11 +7,34 @@ from authentication.models import Facilitator, GovernmentWorker, User
 from common.utils.forms import FileValidationMixin
 from dashboard.user_management.constants import (
     ADMINISTRATIVE_REGION_REQUIRED_MESSAGE,
+    COMMITTEE_ACCOUNT_EXISTS_MESSAGE,
     DEPARTMENT_ASSIGNMENT_ERROR_MESSAGE,
     DEPARTMENT_REQUIRED_MESSAGE,
 )
 from grm.constants import EMAIL_ERROR_MESSAGE, USERNAME_ERROR_MESSAGE
 from issues.models import AdministrativeRegion, IssueDepartment
+
+
+def existing_committee_account_error(department, administrative_region, exclude_user=None):
+    """
+    Return an error message if another committee account already exists for this
+    (department, region) pair, otherwise ``None``. One account per committee is allowed.
+    """
+    if not department or not administrative_region:
+        return None
+    existing = GovernmentWorker.objects.filter(
+        department=department, administrative_region=administrative_region
+    ).select_related("user")
+    if exclude_user is not None:
+        existing = existing.exclude(user=exclude_user)
+    worker = existing.first()
+    if worker is None:
+        return None
+    return COMMITTEE_ACCOUNT_EXISTS_MESSAGE % {
+        "dept": department.name,
+        "region": administrative_region.name,
+        "name": worker.user.name,
+    }
 
 
 class PasswordConfirmForm(forms.Form):
@@ -187,6 +210,12 @@ class CaseManagerCreationForm(BaseUserCreationForm):
         if not department:
             raise ValidationError({"department": DEPARTMENT_REQUIRED_MESSAGE})
 
+        duplicate_error = existing_committee_account_error(
+            department, cleaned_data.get("case_manager_administrative_region")
+        )
+        if duplicate_error:
+            raise ValidationError({"case_manager_administrative_region": duplicate_error})
+
         # Check if department already has a head when trying to assign one
         if is_department_head and department and department.head:
             raise ValidationError(
@@ -352,6 +381,10 @@ class UserUpdateForm(forms.ModelForm):
             department = cleaned_data.get("department")
             if not department:
                 self.add_error("department", DEPARTMENT_REQUIRED_MESSAGE)
+
+            duplicate_error = existing_committee_account_error(department, administrative_region, exclude_user=user)
+            if duplicate_error:
+                self.add_error("administrative_region", duplicate_error)
 
             is_department_head = cleaned_data.get("is_department_head")
             if is_department_head and department and department.head and department.head != user:

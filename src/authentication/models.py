@@ -142,6 +142,14 @@ class GovernmentWorker(models.Model):
     class Meta:
         verbose_name = _("Government Worker")
         verbose_name_plural = _("Government Workers")
+        constraints = [
+            # A committee (CCGP, CLGP, national) has exactly one account: its secretary's.
+            models.UniqueConstraint(
+                fields=["department", "administrative_region"],
+                name="unique_committee_account_per_department_and_region",
+                violation_error_message=_("A committee account already exists for this department in this region."),
+            )
+        ]
 
     @property
     def name(self):
