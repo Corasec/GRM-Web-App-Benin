@@ -950,6 +950,9 @@ class IssueAttachment(models.Model):
         related_name='attachments',
         verbose_name=_('Uploaded by'),
     )
+    # What the file documents, e.g. "Step: meeting with the village chief" or "Rejection: out of scope".
+    # Filled by the mobile app when a file is added to an action (step, rejection, resolution, escalation).
+    description = models.CharField(max_length=500, blank=True, default="", verbose_name=_('Description'))
     created_date = models.DateTimeField(default=now, verbose_name=_('Created at'))
     updated_date = models.DateTimeField(auto_now=True, verbose_name=_('Updated at'))
     deleted_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Deleted at'))

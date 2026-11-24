@@ -579,6 +579,7 @@ class IssueAttachmentSerializer(serializers.ModelSerializer):
             'url',
             'issue',
             'file',
+            'description',
             'uploaded_by',
             'created_date',
             'updated_date',
@@ -597,4 +598,5 @@ class IssueAttachmentCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IssueAttachment
-        fields = ['file']
+        fields = ['file', 'description']
+        extra_kwargs = {'description': {'required': False}}
