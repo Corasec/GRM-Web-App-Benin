@@ -44,8 +44,6 @@ from issues.models import (
     CitizenGroup,
     Comment,
     Component,
-    SubComponent,
-    SubProjectGroup,
     Issue,
     IssueAttachment,
     IssueCategory,
@@ -55,6 +53,8 @@ from issues.models import (
     IssueStatusChange,
     IssueSubType,
     IssueType,
+    SubComponent,
+    SubProjectGroup,
 )
 from wizard.constants import CITIZEN_GROUP2_CHOICE, CITIZEN_GROUP_CHOICE, COMPLETED_CHOICE
 from wizard.models import WizardSection
@@ -127,7 +127,9 @@ class Command(BaseCommand):
             if demo_resync and pinecone_key:
                 try:
                     namespace = "benin-demo"
-                    self.stdout.write(self.style.NOTICE("DB has data; DEMO_PINECONE_RESYNC is enabled. Resyncing Pinecone…"))
+                    self.stdout.write(
+                        self.style.NOTICE("DB has data; DEMO_PINECONE_RESYNC is enabled. Resyncing Pinecone…")
+                    )
                     PineconeConnector().delete_all_vectors(namespace=namespace)
                     Issue.objects.filter(confirmed=True).update(vectorized=False)
                     call_command("etl_upload_issues_to_pinecone", namespace=namespace)
@@ -286,7 +288,10 @@ class Command(BaseCommand):
             )
             GovernmentWorker.objects.create(user=u, department=d1, administrative_region=parent)
 
-        if first_parent and not GovernmentWorker.objects.filter(department=d2, administrative_region=first_parent).exists():
+        if (
+            first_parent
+            and not GovernmentWorker.objects.filter(department=d2, administrative_region=first_parent).exists()
+        ):
             u_d2 = self._create_demo_staff_user(
                 "cm_d2_demo",
                 "case-mgr-d2@grm-benin.local",
@@ -402,9 +407,9 @@ class Command(BaseCommand):
             threshold_days_to_escalate=None,
         )
 
-        d1 = IssueDepartment.objects.create(name="Comité communautaire de gestion des plaintes")
-        d2 = IssueDepartment.objects.create(name="Comité local de gestion des plaintes")
-        d3 = IssueDepartment.objects.create(name="Secrétariat technique à la coordination")
+        d1 = IssueDepartment.objects.create(name="Comité communautaire de gestion des plaintes", processing_days=3)
+        d2 = IssueDepartment.objects.create(name="Comité local de gestion des plaintes", processing_days=3)
+        d3 = IssueDepartment.objects.create(name="Secrétariat technique à la coordination", processing_days=5)
 
         lvl_country = AdministrativeLevel.objects.get(name="country")
         lvl_commune = AdministrativeLevel.objects.get(name="commune")
@@ -791,15 +796,11 @@ class Command(BaseCommand):
 
             appeal_status = i in appeal_indices
             appeal_reason = (
-                "Demande d'appel démo (données fictives) — contestation du traitement initial."
-                if appeal_status
-                else ""
+                "Demande d'appel démo (données fictives) — contestation du traitement initial." if appeal_status else ""
             )
             escalate_flag = i in escalation_indices
             escalation_reason = (
-                "Escalade démo : arbitrage requis au niveau départemental (données fictives)."
-                if escalate_flag
-                else ""
+                "Escalade démo : arbitrage requis au niveau départemental (données fictives)." if escalate_flag else ""
             )
             escalated_date = (now - timedelta(days=2)) if escalate_flag else None
 

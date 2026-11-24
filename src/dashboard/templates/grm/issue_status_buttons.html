@@ -7,6 +7,12 @@
     </div>
     <div class="col-md-9" id="#status_name">
         {{ status.name }}
+        {% if is_overdue %}
+            <span class="badge badge-danger ml-1">{% translate 'Overdue' %}</span>
+        {% endif %}
+        {% if processing_deadline %}
+            <small class="d-block text-muted">{% translate 'Processing deadline' %} : {{ processing_deadline|date:"d/m/Y" }}</small>
+        {% endif %}
     </div>
 </div>
 <div class="row mb-2">

@@ -3034,3 +3034,35 @@ msgstr "Acceptez la plainte avant de la remonter."
 #: issues/serializers.py issues/permissions.py
 msgid "This issue is resolved or rejected: it can no longer be modified."
 msgstr "Cette plainte est résolue ou rejetée : elle ne peut plus être modifiée."
+
+#: issues/models.py dashboard/templates/grm
+msgid "Overdue"
+msgstr "En retard"
+
+#: issues/models.py dashboard/templates/grm
+msgid "Processing deadline"
+msgstr "Échéance de traitement"
+
+#: issues/models.py dashboard/templates/grm
+msgid "Processing time (working days)"
+msgstr "Délai de traitement (jours ouvrables)"
+
+#: issues/models.py dashboard/templates/grm
+msgid "Specific processing time (working days)"
+msgstr "Délai spécifique (jours ouvrables)"
+
+#: issues/models.py dashboard/templates/grm
+msgid "Working days (Monday to Friday) to process an issue before it is escalated. Empty: no deadline."
+msgstr "Jours ouvrables (lundi au vendredi) pour traiter une plainte avant sa remontée automatique. Vide : pas de délai."
+
+#: issues/models.py dashboard/templates/grm
+msgid "Replaces the committee processing time for this category. Empty: committee processing time."
+msgstr "Remplace le délai du comité pour cette catégorie (ex. VBG/EAS/HS). Vide : délai du comité."
+
+#: issues/models.py dashboard/templates/grm
+msgid "e.g. 3"
+msgstr "ex. 3"
+
+#: issues/models.py dashboard/templates/grm
+msgid "Committee time"
+msgstr "Délai du comité"

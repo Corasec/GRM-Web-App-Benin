@@ -68,16 +68,16 @@ There are three ways to escalate — **automatic**, **voluntary from the mobile 
 
 ### 2.1 Automatic escalation
 
+Each committee has a **processing time in working days** (Monday to Friday; public holidays are not handled), set per department in the setup wizard: CCGP 3, CLGP 3, national committee 5 by default. A category can replace it with a **specific processing time** (e.g. GBV / SEA / SH cases). The time is counted from the **reception by the committee** — the creation of the case or its last escalation — whatever the status (an issue never accepted is escalated too). Code: [`issues/deadlines.py`](../src/issues/deadlines.py).
+
 Two scheduled background jobs (Celery) do the work:
 
-1. **Flagging (once a day):** reviews every open case (not in a final or rejected status) and computes how many days have passed since the **start of the current period** — the latest of the moment the case entered its status and its last escalation. If that exceeds the "days to escalate" threshold configured for the status (setup wizard), the case is flagged. Counting from the last escalation gives each committee a full period: an escalated case no longer climbs one level per day up to the top.
-2. **Execution (every 5 minutes):** reassigns every flagged case to the next committee and adds an automatic comment explaining that the processing time was exceeded. Each case is processed independently: an error on one case is logged and does not block the others. A case already at the national committee keeps its flag and is reported as "not escalable".
-
-> Thresholds are still configured **per status, in calendar days**. Per-level deadlines in working days (3 / 3 / 5) and the 30-day rule for GBV cases are backlog item 9.
+1. **Flagging (once a day):** flags every open case (not resolved / rejected) whose committee exceeded its processing time. Cases handled by the national committee cannot go higher: they are only reported and shown as **"Overdue"** on the dashboard (issue list and issue page, with the processing deadline).
+2. **Execution (every 5 minutes):** reassigns every flagged case to the next committee and adds an automatic comment explaining that the processing time was exceeded. Each case is processed independently: an error on one case is logged and does not block the others.
 
 ### 2.2 Voluntary escalation (mobile app)
 
-At any time while working on a case, the committee in charge can escalate it to the next level, **with a mandatory reason**. The escalation is executed immediately by the server: the committee loses the case right away. If there is no higher committee, the request is refused with a clear message.
+Once it has **accepted** the case (acceptance proves the committee took it in charge), the committee can escalate it to the next level at any time, **with a mandatory reason**. The escalation is executed immediately by the server: the committee loses the case right away. If there is no higher committee, the request is refused with a clear message.
 
 ### 2.3 Manual escalation and de-escalation (dashboard)
 

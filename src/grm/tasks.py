@@ -4,16 +4,15 @@ from celery import shared_task
 from celery.schedules import crontab
 from django.conf import settings
 from django.core.management import call_command
-from django.db.models import F, IntegerField, OuterRef, Q, Subquery
-from django.db.models.functions import Extract, Greatest, Now
-from django.db.models.functions.comparison import Cast
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from dashboard.constants import MONTHLY_CHOICE, QUARTERLY_CHOICE, WEEKLY_CHOICE
 from grm.celery_app import app
+from issues.deadlines import is_overdue
 from issues.escalation import escalate_issue
-from issues.models import Comment, Issue, IssueStatusChange
+from issues.models import Comment, Issue
 
 COUCHDB_GRM_DATABASE = settings.COUCHDB_GRM_DATABASE
 
@@ -149,63 +148,39 @@ def escalate_issues():
 @app.task
 def mark_issues_to_be_escalated():
     """
-    Identify and mark issues that have exceeded their escalation threshold.
+    Flag the open issues whose committee exceeded its processing time (issues/deadlines.py):
+    CCGP 3, CLGP 3, national 5 working days by default, or the category's specific time,
+    counted from the reception by the committee (creation or last escalation).
 
-    An issue is marked for escalation when all of the following conditions are met:
-      - It is confirmed.
-      - It is not already flagged for escalation.
-      - Its current status is neither final nor rejected.
-      - Its current status defines a valid `threshold_days_to_escalate`.
-      - The issue has remained in its current status longer than that threshold.
-
-    The function performs this efficiently using SQL-level annotations:
-      - Retrieves the timestamp of the open IssueStatusChange (the moment the issue
-        entered its current status).
-      - Computes the number of days spent in the current status directly in SQL.
-      - Filters issues that exceed their escalation threshold.
-      - Marks all matching issues by setting `escalate_flag=True` in a single bulk update.
+    Flagged issues are escalated to the next committee by ``escalate_issues``. Issues handled by
+    the top committee cannot go higher: they are only reported (and shown as overdue).
 
     Returns:
-        dict: A dictionary with the number of issues updated:
-              {"updated_issues": <count>}
+        dict: {"updated_issues": <flagged count>, "overdue_at_top": [<issue ids>]}
     """
+    issues = Issue.objects.filter(
+        confirmed=True,
+        escalate_flag=False,
+        assignee__isnull=False,
+        status__final_status=False,
+        status__rejected_status=False,
+    ).select_related("status", "category", "assignee__governmentworker__department", "administrative_region")
 
-    # Subquery: get the entered_at of the open status change
-    open_status_change = (
-        IssueStatusChange.objects.filter(
-            issue=OuterRef("pk"),
-            exited_at__isnull=True,
-        )
-        .order_by()
-        .values("entered_at")[:1]
-    )
+    today = timezone.localdate()
+    to_flag, overdue_at_top = [], []
+    for issue in issues:
+        try:
+            if not is_overdue(issue, today):
+                continue
+            if issue.get_assignee_to_escalate() is None:
+                overdue_at_top.append(issue.id)
+            else:
+                to_flag.append(issue.id)
+        except Exception:
+            logger.exception("mark_issues_to_be_escalated: cannot check issue %s", issue.id)
 
-    # Annotate issues with:
-    # - entered_at of open status
-    # - the start of the current period: the latest of entering the status and the last escalation,
-    #   so that an escalated issue gets a full period at its new committee
-    # - days computed in SQL (PostgreSQL GREATEST ignores NULL escalated_date)
-    issues = (
-        Issue.objects.filter(
-            confirmed=True,
-            escalate_flag=False,
-            status__final_status=False,
-            status__rejected_status=False,
-            status__threshold_days_to_escalate__isnull=False,
-        )
-        .annotate(
-            entered_at=Subquery(open_status_change),
-            period_start=Greatest(F("entered_at"), F("escalated_date")),
-            seconds_in_status=Extract(Now() - F("period_start"), "epoch"),
-            days_in_status=Cast(F("seconds_in_status") / 86400.0, IntegerField()),
-        )
-        .filter(days_in_status__gt=F("status__threshold_days_to_escalate"))
-    )
-
-    # Bulk update: no loops, no per-object save()
-    updated_count = issues.update(escalate_flag=True)
-
-    return {"updated_issues": updated_count}
+    updated_count = Issue.objects.filter(id__in=to_flag).update(escalate_flag=True)
+    return {"updated_issues": updated_count, "overdue_at_top": overdue_at_top}
 
 
 @app.task

@@ -102,9 +102,10 @@ class IssueDepartmentForm(forms.ModelForm):
 
     class Meta:
         model = IssueDepartment
-        fields = ["name"]
+        fields = ["name", "processing_days"]
         widgets = {
             "name": forms.TextInput(attrs={"placeholder": _("Enter department name")}),
+            "processing_days": forms.NumberInput(attrs={"min": 1, "step": 1, "placeholder": _("e.g. 3")}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -322,6 +323,7 @@ class IssueCategoryForm(forms.ModelForm):
             "assigned_escalation_department",
             "confidentiality_level",
             "redirection_protocol",
+            "processing_days",
         ]
         labels = {
             "parent": _("Subtype"),
@@ -340,6 +342,7 @@ class IssueCategoryForm(forms.ModelForm):
             ),
             "confidentiality_level": forms.Select(attrs={"placeholder": _("Click to select confidentiality level")}),
             "redirection_protocol": forms.Select(attrs={"placeholder": _("Click to select redirection protocol")}),
+            "processing_days": forms.NumberInput(attrs={"min": 1, "step": 1, "placeholder": _("Committee time")}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -401,24 +404,17 @@ class IssueStatusForm(forms.ModelForm):
 
     class Meta:
         model = IssueStatus
-        fields = ["name", "threshold_days", "threshold_days_to_escalate"]
+        # Escalation now follows the committee processing time (department step), not the status
+        fields = ["name", "threshold_days"]
         widgets = {
             "name": forms.TextInput(attrs={"placeholder": _("Enter status name")}),
             "threshold_days": forms.NumberInput(attrs={"min": 1, "step": 1}),
-            "threshold_days_to_escalate": forms.NumberInput(attrs={"step": 1}),
         }
 
     def clean_threshold_days(self):
         """Reject 0."""
         value = self.cleaned_data["threshold_days"]
         if value == 0:
-            raise ValidationError(_("Threshold must be greater than zero."))
-        return value
-
-    def clean_threshold_days_to_escalate(self):
-        """Reject 0."""
-        value = self.cleaned_data["threshold_days_to_escalate"]
-        if value is not None and value == 0:
             raise ValidationError(_("Threshold must be greater than zero."))
         return value
 
@@ -475,7 +471,6 @@ class IssueStatusBaseFormSet(forms.BaseModelFormSet):
             # 3. Remove threshold_days for rejected/final
             if flag in ('rejected_status', 'final_status'):
                 form.fields.pop('threshold_days', None)
-                form.fields.pop('threshold_days_to_escalate', None)
 
 
 ExistingIssueStatusFormSet = forms.modelformset_factory(
