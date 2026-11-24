@@ -355,13 +355,14 @@ class IssueCreateSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        citizen_data = validated_data.pop('citizen')
+        citizen_data = validated_data.pop('citizen', None) or {}
         citizen = Citizen(
-            name=citizen_data['name'],
-            age_group=citizen_data['age_group'],
-            type=citizen_data['type'],
-            group=citizen_data['group'],
-            group_2=citizen_data['group_2'],
+            name=citizen_data.get('name') or '',
+            age_group=citizen_data.get('age_group'),
+            type=citizen_data.get('type'),
+            gender=citizen_data.get('gender') or None,
+            group=citizen_data.get('group'),
+            group_2=citizen_data.get('group_2'),
         )
         citizen.save()
         category_data = validated_data.pop('category')

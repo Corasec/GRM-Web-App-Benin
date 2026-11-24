@@ -377,3 +377,25 @@ class IssueCreateAPIViewTest(APITestCase):
         call_args = mock_send_mail.call_args
         assert "citizen@example.com" in str(call_args)
         assert "Issue Created" in call_args[1]['subject']
+
+    def test_create_issue_stores_citizen_gender(self):
+        """Regression: the gender entered on the mobile app was not saved."""
+        self.client.force_authenticate(user=self.reporter_user)
+        data = self.__get_valid_data()
+        data["citizen"]["gender"] = "female"
+
+        response = self.client.post(self.url, data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Issue.objects.get().citizen.gender, "female")
+
+    def test_create_issue_without_gender(self):
+        """Gender is optional."""
+        self.client.force_authenticate(user=self.reporter_user)
+        data = self.__get_valid_data()
+        data["citizen"].pop("gender", None)
+
+        response = self.client.post(self.url, data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNone(Issue.objects.get().citizen.gender)
