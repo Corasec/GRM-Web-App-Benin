@@ -464,7 +464,8 @@ class IssueUpdateAPIViewTest(APITestCase):
         mock_send_sms.assert_called_once()
         call_args = mock_send_sms.call_args
         assert "1234567890" in str(call_args)
-        assert "The status of your issue has been updated" in call_args[1]['body']
+        # Short SMS: tracking code first, then the new status
+        assert call_args[1]['body'].startswith(f"GRM - Complaint {issue.tracking_code}: new status")
 
     def test_patch_appeal_status_by_assignee(self):
         """Test that assignee can update appeal_status field."""

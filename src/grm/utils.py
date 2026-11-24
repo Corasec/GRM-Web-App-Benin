@@ -53,15 +53,33 @@ def get_issue_select_options_choices(model_class, parent_id=None, empty_choice=T
     return get_choices_select2(query_result, empty_choice)
 
 
-def normalize_phone_number(phone_number):
-    contact = phone_number.translate({ord(c): None for c in string.whitespace})
-    if contact.startswith("00"):
-        contact = contact.replace("00", "+", 1)
+def normalize_phone_number(phone_number, country_calling_code=None):
+    """
+    Return ``phone_number`` in international format (``+<country code><number>``).
 
-    country_calling_code = settings.COUNTRY_CALLING_CODE
-    if not contact.startswith(country_calling_code):
-        contact = f"{country_calling_code}{contact}"
-    return contact
+    Accepted inputs (Benin examples): ``+229 01 97 00 00 00``, ``00229 0197000000``,
+    ``2290197000000`` and the national format ``01 97 00 00 00``, which gets the country code
+    from ``settings.COUNTRY_CALLING_CODE`` (``229``, ``+229`` or ``00229``).
+    Returns ``""`` when there is no digit.
+    """
+    raw = (phone_number or "").strip()
+    digits = "".join(ch for ch in raw if ch.isdigit())
+    if not digits:
+        return ""
+
+    if raw.startswith("+"):
+        return f"+{digits}"
+    if digits.startswith("00"):
+        return f"+{digits[2:]}"
+
+    code = "".join(ch for ch in str(country_calling_code or settings.COUNTRY_CALLING_CODE or "") if ch.isdigit())
+    code = code[2:] if code.startswith("00") else code
+    if not code:
+        return f"+{digits}"
+    # Already prefixed with the country code (longer than a national number)
+    if digits.startswith(code) and len(digits) - len(code) >= 8:
+        return f"+{digits}"
+    return f"+{code}{digits}"
 
 
 def reset_sequences():

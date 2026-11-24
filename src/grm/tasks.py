@@ -1,6 +1,5 @@
 import logging
 
-import cryptocode
 from celery import shared_task
 from celery.schedules import crontab
 from django.conf import settings
@@ -10,23 +9,10 @@ from django.db.models.functions import Extract, Now
 from django.db.models.functions.comparison import Cast
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from twilio.base.exceptions import TwilioRestException
 
-from authentication.models import Cdata
 from dashboard.constants import MONTHLY_CHOICE, QUARTERLY_CHOICE, WEEKLY_CHOICE
 from grm.celery_app import app
-from grm.constants import (
-    ACCEPTED_CHOICE,
-    ALERT_CHOICE,
-    CLOSED_CHOICE,
-    EMAIL_CHOICE,
-    PHONE_CHOICE,
-    REJECTED_CHOICE,
-)
-from grm.utils import normalize_phone_number
 from issues.models import Comment, Issue, IssueStatusChange
-from mail_client import send_mail_notification
-from sms_client import send_sms
 
 COUCHDB_GRM_DATABASE = settings.COUCHDB_GRM_DATABASE
 
@@ -252,140 +238,6 @@ def reassign_issues_to_appeal():
                 result["appeal_is_not_available"].append(issue.id)
         except Exception:
             result["appeal_is_not_available"].append(issue.id)
-
-    result["updated_issues"] = updated_issues
-    return result
-
-
-@app.task
-def send_sms_message():
-    messages = {
-        "accepted_alert_message": _("Your issue submitted has been accepted into the system with the tracking code %s"),
-        "rejected_alert_message": _("Your issue %s(tracking_code)s has been rejected with the following response: %s"),
-        "closed_alert_message": _("Your issue %s has been resolved with the following response: %s"),
-    }
-    issues = Issue.objects.filter(
-        confirmed=True,
-        assigned__isnull=False,
-        contact_medium=ALERT_CHOICE,
-        contact_method=PHONE_CHOICE,
-        alert_message_status="",
-    ).exclude(Q(contact_information="") | Q(tracking_code=""))
-
-    result = {"errors": [], "notified_issues": [], "updated_issues": 0}
-    updated_issues = 0
-    for issue in issues:
-        notified_issues = False
-        status = issue.status
-        tracking_code = issue.tracking_code
-        phone = issue.contact_information
-        if phone:
-            if phone == "*":
-                contact = Cdata.objects.filter(key=issue.id).first()
-                phone = cryptocode.decrypt(contact.data, issue.id) if contact else None
-
-            phone = normalize_phone_number(phone)
-            no_alert = not issue.alert_message_status or issue.alert_message_status != ACCEPTED_CHOICE
-            if no_alert and status.open_status:
-                msg = messages["accepted_alert_message"] % tracking_code
-                try:
-                    send_sms(to=phone, body=msg)
-                    notified_issues = True
-                    issue.alert_message_status = ACCEPTED_CHOICE
-                except TwilioRestException as e:
-                    result["errors"].append(e.msg)
-
-            no_alert = not issue.alert_message_status or issue.alert_message_status != REJECTED_CHOICE
-            if no_alert and status.rejected_status:
-                msg = messages["rejected_alert_message"] % (tracking_code, issue.reject_reason)
-                try:
-                    send_sms(to=phone, body=msg)
-                    notified_issues = True
-                    issue.alert_message_status = REJECTED_CHOICE
-                except TwilioRestException as e:
-                    result["errors"].append(e.msg)
-
-            no_alert = not issue.alert_message_status or issue.alert_message_status != CLOSED_CHOICE
-            if no_alert and status.final_status:
-                msg = messages["closed_alert_message"] % (tracking_code, issue.research_result)
-                try:
-                    send_sms(to=phone, body=msg)
-                    notified_issues = True
-                    issue.alert_message_status = CLOSED_CHOICE
-                except TwilioRestException as e:
-                    result["errors"].append(e.msg)
-
-            if notified_issues:
-                issue.save()
-                updated_issues += 1
-
-    result["updated_issues"] = updated_issues
-    return result
-
-
-@app.task
-def send_mail_message():
-    messages = {
-        "accepted_alert_message": _("Your issue submitted has been accepted into the system with the tracking code %s"),
-        "rejected_alert_message": _("Your issue %s has been rejected with the following response: %s"),
-        "closed_alert_message": _("Your issue %s has been resolved with the following response: %s"),
-    }
-    issues = Issue.objects.filter(
-        confirmed=True,
-        assigned__isnull=False,
-        contact_medium=ALERT_CHOICE,
-        contact_method=EMAIL_CHOICE,
-        alert_message_status="",
-    ).exclude(Q(contact_information="") | Q(tracking_code=""))
-
-    result = {"errors": [], "notified_issues": [], "updated_issues": 0}
-    updated_issues = 0
-    for issue in issues:
-        notified_issues = False
-        status = issue.status
-        tracking_code = issue.tracking_code
-        recipient = issue.contact_information
-
-        if recipient == "*":
-            contact = Cdata.objects.get(key=issue.id) if Cdata.objects.filter(key=issue.id).exists() else None
-            recipient = cryptocode.decrypt(contact.data, issue.id) if contact else None
-
-        no_alert = not issue.alert_message_status or issue.alert_message_status != ACCEPTED_CHOICE
-        if no_alert and status.open_status:
-            msg = messages["accepted_alert_message"] % tracking_code
-            try:
-                subject = "open_status"
-                send_mail_notification(subject, msg, recipient)
-                notified_issues = True
-                issue.alert_message_status = ACCEPTED_CHOICE
-            except Exception as e:
-                result["errors"].append(str(e))
-
-        no_alert = not issue.alert_message_status or issue.alert_message_status != REJECTED_CHOICE
-        if no_alert and status.rejected_status:
-            msg = messages["rejected_alert_message"] % (tracking_code, issue.reject_reason)
-            try:
-                subject = "rejected_status"
-                send_mail_notification(subject, msg, recipient)
-                notified_issues = True
-                issue.alert_message_status = REJECTED_CHOICE
-            except Exception as e:
-                result["errors"].append(str(e))
-
-        no_alert = not issue.alert_message_status or issue.alert_message_status != CLOSED_CHOICE
-        if no_alert and status.final_status:
-            msg = messages["closed_alert_message"] % (tracking_code, issue.research_result)
-            try:
-                subject = "final_status"
-                send_mail_notification(subject, msg, recipient)
-                notified_issues = True
-                issue.alert_message_status = CLOSED_CHOICE
-            except Exception as e:
-                result["errors"].append(str(e))
-
-        if notified_issues:
-            issue.save()
-            updated_issues += 1
 
     result["updated_issues"] = updated_issues
     return result
@@ -626,11 +478,8 @@ def setup_periodic_tasks(sender, **kwargs):
     # Calls escalate_issues() every 5 minutes.
     sender.add_periodic_task(300, escalate_issues.s(), name="escalate issues every 5 minutes")
 
-    # Calls send_sms_message() every 5 minutes.
-    sender.add_periodic_task(300, send_sms_message.s(), name="send sms every 5 minutes")
-
-    # Calls send_mail_message() every 5 minutes.
-    sender.add_periodic_task(300, send_mail_message.s(), name="send mail every 5 minutes")
+    # Citizen notifications are sent immediately by the actions themselves (grm/notifications.py),
+    # there is no notification queue task anymore.
 
     # Calls mark_issues_to_be_escalated() every day
     sender.add_periodic_task(86400, mark_issues_to_be_escalated.s(), name="mark issues to be escalated every day")
