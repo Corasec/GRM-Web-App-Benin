@@ -138,6 +138,8 @@ docker compose exec django-app ./run.sh django import_accounts /tmp/import_compt
 
 Result: 876 committee accounts (CCGP per village, CLGP per commune, national committee) and 110 field staff accounts (FC, SC) with their villages. Login identifier = email (`ccgp.<village>@mgp.bj`, `clgp.<commune>@mgp.bj`, `cnational@mgp.bj`, `fc|sc.<prénom>.<nom>@mgp.bj`).
 
+**Passwords afterwards:** each user can change their password in the app (*Profile → Change password*, needs a connection). When someone forgets it, a GRM manager sets a new one in the dashboard: *User Management → the user → Reset password* (asks the manager's own password). Nobody is forced to change the initial password for now.
+
 ### 4.4 Optional checks in the admin (`/admin/`)
 
 Nothing is required. Useful views: *Periodic tasks* (scheduled jobs, all enabled), *Users*, *Government workers* (committee accounts), *Facilitators* (role FC / SC, covered villages).

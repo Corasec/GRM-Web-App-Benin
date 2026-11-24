@@ -1,6 +1,7 @@
 from django.urls import path
 
 from authentication.views import (
+    ChangePasswordAPIView,
     CitizenDetailAPIView,
     CitizenLoginAPIView,
     CitizenRegistrationCreateAPIView,
@@ -30,6 +31,7 @@ urlpatterns = [
         name="password_reset_confirm",
     ),
     path('profile/', MobileProfileAPIView.as_view(), name='mobile-profile'),
+    path('change-password/', ChangePasswordAPIView.as_view(), name='change-password'),
     path('facilitator-profile/', FacilitatorProfileAPIView.as_view(), name='facilitator-profile'),
     path('facilitator-credentials/update/', FacilitatorCredentialUpdateAPIView.as_view(), name='facilitator-login'),
 ]

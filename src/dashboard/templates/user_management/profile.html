@@ -129,6 +129,11 @@
 							</button>
 						</form>
 					{% endif %}
+					{% if can_reset_password %}
+						<button class="btn btn-outline-secondary ml-1" data-toggle="modal" data-target="#resetPasswordModal">
+							<i class="fas fa-key"></i> {% translate 'Reset password' %}
+						</button>
+					{% endif %}
 					<a href="{% url 'dashboard:user_management:update' obj.id %}" class="btn btn-outline-primary float-right">
 						{% translate 'Edit User' %}
 					</a>
@@ -266,6 +271,35 @@
 			</div>
 		</div>
 	</div>
+
+	{% if can_reset_password %}
+	<div class="modal fade" id="resetPasswordModal">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<form class="form-horizontal" action="{% url 'dashboard:user_management:reset_password' obj.id %}"
+					  method="POST" autocomplete="off">
+					{% csrf_token %}
+					<div class="modal-header">
+						<h4 class="modal-title">{% translate 'Reset password' %}</h4>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">×</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<p class="text-muted">
+							{% blocktranslate with email=obj.email %}New password for {{ email }}: at least 8 characters, with letters and digits. Give it to the user, who can change it later from the mobile app.{% endblocktranslate %}
+						</p>
+						{% bootstrap_form reset_password_form %}
+					</div>
+					<div class="modal-footer justify-content-between">
+						<button type="button" class="btn btn-default" data-dismiss="modal">{% translate 'Close' %}</button>
+						<button type="submit" class="btn btn-primary">{% translate 'Reset password' %}</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	{% endif %}
 
 	<div id="editProfileFormModal" class="modal" role="dialog" aria-hidden="true" data-backdrop="static"></div>
 {% endblock modals %}

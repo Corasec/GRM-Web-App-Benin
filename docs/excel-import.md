@@ -40,7 +40,7 @@ Appeals are not used yet: every category gets the top-level committee as appeal 
 - dashboard, **User Management → "Import accounts from Excel"** (GRM managers);
 - or on the server: `python manage.py import_accounts comptes.xlsx`.
 
-**Password:** every created account receives the **same initial password**, typed in the form or at the command prompt (asked twice) — it is never written in the file. At least 8 characters with letters and digits. (Changing one's password from the app is planned.)
+**Password:** every created account receives the **same initial password**, typed in the form or at the command prompt (asked twice) — it is never written in the file. At least 8 characters with letters and digits. Each user can then change it from the mobile app (*Profile → Change password*); a GRM manager can reset a forgotten one from the dashboard (*User Management → user → Reset password*).
 
 **Run it after the configuration import:** committees and regions must exist. The login identifier is the **email**; accounts whose email already exists are skipped and listed.
 
