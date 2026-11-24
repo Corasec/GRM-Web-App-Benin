@@ -3181,3 +3181,105 @@ msgstr "Réinitialiser le mot de passe"
 #, python-format
 msgid "New password for %(email)s: at least 8 characters, with letters and digits. Give it to the user, who can change it later from the mobile app."
 msgstr "Nouveau mot de passe pour %(email)s : au moins 8 caractères, avec des lettres et des chiffres. Communiquez-le à l'utilisateur, qui pourra le changer ensuite depuis l'application mobile."
+
+msgid "GRM configuration"
+msgstr "Configuration du MGP"
+
+#, python-format
+msgid "used by %(count)s issue(s): it can only be renamed"
+msgstr "utilisé par %(count)s plainte(s) : on peut seulement le renommer"
+
+msgid "delete its subtypes first"
+msgstr "supprimez d'abord ses sous-types"
+
+msgid "delete its categories first"
+msgstr "supprimez d'abord ses catégories"
+
+msgid "Saved. The mobile app gets the change at its next synchronisation."
+msgstr "Enregistré. L'application mobile recevra la modification à sa prochaine synchronisation."
+
+msgid "New type"
+msgstr "Nouveau type"
+
+msgid "Edit type"
+msgstr "Modifier le type"
+
+msgid "New subtype"
+msgstr "Nouveau sous-type"
+
+msgid "Edit subtype"
+msgstr "Modifier le sous-type"
+
+msgid "New category"
+msgstr "Nouvelle catégorie"
+
+msgid "Edit category"
+msgstr "Modifier la catégorie"
+
+#, python-format
+msgid "« %(name)s » cannot be deleted: %(reason)s."
+msgstr "« %(name)s » ne peut pas être supprimé : %(reason)s."
+
+#, python-format
+msgid "« %(name)s » was deleted."
+msgstr "« %(name)s » a été supprimé."
+
+msgid "Answer to \"What are you reporting?\", e.g. Complaint, Denunciation."
+msgstr "Réponse à « Que signalez-vous ? », par exemple Plainte, Dénonciation."
+
+msgid "Answer to \"What type?\"."
+msgstr "Réponse à « Quel type ? »."
+
+msgid "Sensitive"
+msgstr "Sensible"
+
+msgid "Sensitive issues are anonymised (e.g. gender-based violence, corruption)."
+msgstr "Les plaintes sensibles sont anonymisées (par exemple VBG, corruption)."
+
+msgid "Committee that receives it"
+msgstr "Comité qui la reçoit"
+
+msgid "Answer to \"What is it about?\". Must be unique."
+msgstr "Réponse à « De quoi s'agit-il ? ». Doit être unique."
+
+msgid "The committee where the issue happened at this level (e.g. the village committee)."
+msgstr "Le comité du lieu de la plainte, à ce niveau (par exemple le comité du village)."
+
+msgid "Leave empty to use the committee processing time."
+msgstr "Laisser vide pour utiliser le délai du comité."
+
+msgid "Leave empty to generate it."
+msgstr "Laisser vide pour la générer."
+
+msgid "Categorisation"
+msgstr "Catégorisation"
+
+msgid "Type (What are you reporting?) › Subtype (What type?) › Category (What is it about?). New items reach the mobile app at its next synchronisation. Items already used by issues cannot be deleted, only renamed."
+msgstr "Type (Que signalez-vous ?) › Sous-type (Quel type ?) › Catégorie (De quoi s'agit-il ?). Les ajouts arrivent dans l'application mobile à sa prochaine synchronisation. Un élément déjà utilisé par des plaintes ne peut pas être supprimé, seulement renommé."
+
+msgid "committee processing time"
+msgstr "délai du comité"
+
+msgid "No category yet."
+msgstr "Aucune catégorie pour l'instant."
+
+msgid "No subtype yet."
+msgstr "Aucun sous-type pour l'instant."
+
+msgid "No type yet."
+msgstr "Aucun type pour l'instant."
+
+msgid "Setup wizard configuration"
+msgstr "Configuration de l'assistant"
+
+msgid "Read only: these settings drive the routing of the issues in progress."
+msgstr "Lecture seule : ces réglages pilotent l'orientation des plaintes en cours."
+
+msgid "This item is not used by any issue. It will disappear from the mobile app at its next synchronisation."
+msgstr "Cet élément n'est utilisé par aucune plainte. Il disparaîtra de l'application mobile à sa prochaine synchronisation."
+
+#, python-format
+msgid "%(days)s working day"
+msgid_plural "%(days)s working days"
+msgstr[0] "%(days)s jour ouvrable"
+msgstr[1] "%(days)s jours ouvrables"

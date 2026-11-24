@@ -12,4 +12,5 @@ urlpatterns = [
     # path('subprojects/', include('dashboard.subprojects.urls')),
     # path("couchdb-proxy/", include("dashboard.couchdb_proxy.urls")),
     path("settings/", include("dashboard.settings.urls")),
+    path("grm-configuration/", include("dashboard.grm_configuration.urls")),
 ]

@@ -1,0 +1,92 @@
+{% extends 'layouts/base.html' %}{% load i18n %}
+
+{% block content %}
+	<div class="row">
+		<div class="col-lg-8">
+			<div class="card">
+				<div class="card-header">
+					<h3 class="card-title text-bold">{% translate "Categorisation" %}</h3>
+					<div class="card-tools">
+						<a href="{% url 'dashboard:grm_configuration:type_create' %}" class="btn btn-sm btn-primary">
+							<i class="fas fa-plus"></i> {% translate "New type" %}
+						</a>
+					</div>
+				</div>
+				<div class="card-body">
+					<p class="text-muted">
+						{% translate "Type (What are you reporting?) › Subtype (What type?) › Category (What is it about?). New items reach the mobile app at its next synchronisation. Items already used by issues cannot be deleted, only renamed." %}
+					</p>
+					{% for type in types %}
+						<div class="border rounded mb-3">
+							<div class="d-flex align-items-center p-2 bg-light">
+								<i class="fas fa-folder text-primary mr-2"></i>
+								<strong>{{ type.name }}</strong>
+								<span class="badge badge-secondary ml-2" title="{% translate 'Issues' %}">{{ type.issue_count }}</span>
+								<div class="ml-auto">
+									<a href="{% url 'dashboard:grm_configuration:subtype_create' %}?parent={{ type.pk }}" class="btn btn-xs btn-outline-primary">
+										<i class="fas fa-plus"></i> {% translate "Subtype" %}
+									</a>
+									<a href="{% url 'dashboard:grm_configuration:type_update' type.pk %}" class="btn btn-xs btn-outline-secondary" title="{% translate 'Edit' %}"><i class="fas fa-pen"></i></a>
+									<a href="{% url 'dashboard:grm_configuration:delete' 'type' type.pk %}" class="btn btn-xs btn-outline-danger" title="{% translate 'Delete' %}"><i class="fas fa-trash"></i></a>
+								</div>
+							</div>
+							{% for subtype in type.children.all %}
+								<div class="pl-4 pr-2 pt-2">
+									<div class="d-flex align-items-center">
+										<i class="fas fa-folder-open text-info mr-2"></i>
+										<span class="text-bold">{{ subtype.name }}</span>
+										<span class="badge badge-light ml-2" title="{% translate 'Issues' %}">{{ subtype.issue_count }}</span>
+										<div class="ml-auto">
+											<a href="{% url 'dashboard:grm_configuration:category_create' %}?parent={{ subtype.pk }}" class="btn btn-xs btn-outline-primary">
+												<i class="fas fa-plus"></i> {% translate "Category" %}
+											</a>
+											<a href="{% url 'dashboard:grm_configuration:subtype_update' subtype.pk %}" class="btn btn-xs btn-outline-secondary" title="{% translate 'Edit' %}"><i class="fas fa-pen"></i></a>
+											<a href="{% url 'dashboard:grm_configuration:delete' 'subtype' subtype.pk %}" class="btn btn-xs btn-outline-danger" title="{% translate 'Delete' %}"><i class="fas fa-trash"></i></a>
+										</div>
+									</div>
+									<table class="table table-sm table-hover mt-1 mb-2 ml-3" style="width: calc(100% - 1rem)">
+										{% for category in subtype.categories.all %}
+											<tr>
+												<td>
+													{{ category.name }}
+													{% if category.confidentiality_level == 'anonymous' %}<span class="badge badge-warning ml-1">{% translate "Sensitive" %}</span>{% endif %}
+													<small class="text-muted d-block">
+														{{ category.assigned_department.department.name }}
+														· {% if category.processing_days %}{% blocktranslate count days=category.processing_days %}{{ days }} working day{% plural %}{{ days }} working days{% endblocktranslate %}{% else %}{% translate "committee processing time" %}{% endif %}
+														· {{ category.abbreviation }}
+													</small>
+												</td>
+												<td class="text-right text-nowrap align-middle">
+													<span class="badge badge-light mr-2" title="{% translate 'Issues' %}">{{ category.issue_count }}</span>
+													<a href="{% url 'dashboard:grm_configuration:category_update' category.pk %}" class="btn btn-xs btn-outline-secondary" title="{% translate 'Edit' %}"><i class="fas fa-pen"></i></a>
+													<a href="{% url 'dashboard:grm_configuration:delete' 'category' category.pk %}" class="btn btn-xs btn-outline-danger" title="{% translate 'Delete' %}"><i class="fas fa-trash"></i></a>
+												</td>
+											</tr>
+										{% empty %}
+											<tr><td class="text-muted">{% translate "No category yet." %}</td></tr>
+										{% endfor %}
+									</table>
+								</div>
+							{% empty %}
+								<div class="pl-4 p-2 text-muted">{% translate "No subtype yet." %}</div>
+							{% endfor %}
+						</div>
+					{% empty %}
+						<p class="text-muted">{% translate "No type yet." %}</p>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+		<div class="col-lg-4">
+			<div class="card">
+				<div class="card-header">
+					<h3 class="card-title text-bold">{% translate "Setup wizard configuration" %}</h3>
+				</div>
+				<div class="card-body">
+					<p class="text-muted">{% translate "Read only: these settings drive the routing of the issues in progress." %}</p>
+					{% include 'wizard/_summary_sections.html' %}
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'layouts/base.html' %}{% load bootstrap4 i18n %}
+
+{% block content %}
+	<div class="row">
+		<div class="col-lg-8">
+			<div class="card">
+				<div class="card-header"><h3 class="card-title text-bold">{{ title }}</h3></div>
+				<form method="post" novalidate>
+					{% csrf_token %}
+					<div class="card-body">
+						{% bootstrap_form form %}
+					</div>
+					<div class="card-footer">
+						<a href="{% url 'dashboard:grm_configuration:home' %}" class="btn btn-default">{% translate "Cancel" %}</a>
+						<button type="submit" class="btn btn-primary float-right">{% translate "Save" %}</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+{% endblock %}
