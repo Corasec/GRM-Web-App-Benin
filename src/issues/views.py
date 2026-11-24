@@ -56,7 +56,7 @@ from issues.models import (
     SubComponent,
     SubProjectGroup,
 )
-from issues.permissions import IsReporterOrAssigneePermission
+from issues.permissions import IsReporterOrAssigneePermission, IssueNotClosedPermission
 from issues.serializers import (
     AdministrativeRegionSerializer,
     CitizenAgeGroupSerializer,
@@ -1752,7 +1752,7 @@ class IssueCommentCreateAPIView(CreateAPIView):
 
     serializer_class = CommentCreateSerializer
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated, IsReporterOrAssigneePermission]
+    permission_classes = [IsAuthenticated, IsReporterOrAssigneePermission, IssueNotClosedPermission]
 
     def get_issue(self):
         """
@@ -2100,7 +2100,7 @@ class IssueCommentDeleteAPIView(DestroyAPIView):
 
     queryset = Comment.objects.select_related("issue", "user")
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated, IsReporterOrAssigneePermission]
+    permission_classes = [IsAuthenticated, IsReporterOrAssigneePermission, IssueNotClosedPermission]
 
     def get_issue(self):
         """
@@ -2206,7 +2206,7 @@ class IssueAttachmentCreateAPIView(CreateAPIView):
     serializer_class = IssueAttachmentCreateSerializer
     parser_classes = [MultiPartParser, FormParser]
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated, IsReporterOrAssigneePermission]
+    permission_classes = [IsAuthenticated, IsReporterOrAssigneePermission, IssueNotClosedPermission]
 
     def get_issue(self):
         issue_id = self.kwargs.get("id")
@@ -2551,7 +2551,7 @@ class IssueAttachmentDeleteAPIView(DestroyAPIView):
 
     queryset = IssueAttachment.objects.select_related("issue", "uploaded_by")
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated, IsReporterOrAssigneePermission]
+    permission_classes = [IsAuthenticated, IsReporterOrAssigneePermission, IssueNotClosedPermission]
 
     def get_issue(self):
         """
