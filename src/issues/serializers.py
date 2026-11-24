@@ -369,6 +369,10 @@ class IssueCreateSerializer(serializers.ModelSerializer):
         issue_type_data = validated_data.pop('issue_type')
         issue_sub_type_data = validated_data.pop('issue_sub_type')
 
+        # A new issue without status starts in the initial status (to be accepted or rejected)
+        if not validated_data.get('status'):
+            validated_data['status'] = IssueStatus.objects.filter(initial_status=True).first()
+
         issue = Issue(
             citizen_id=citizen.id,
             category_id=category_data,

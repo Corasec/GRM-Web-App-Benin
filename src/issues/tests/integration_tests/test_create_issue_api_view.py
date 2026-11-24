@@ -34,7 +34,7 @@ from issues.factories import (
     IssueTypeFactory,
     SubComponentFactory,
 )
-from issues.models import Issue, IssueStatusChange
+from issues.models import Issue, IssueStatus, IssueStatusChange
 
 
 @pytest.mark.django_db
@@ -399,3 +399,15 @@ class IssueCreateAPIViewTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNone(Issue.objects.get().citizen.gender)
+
+    def test_create_issue_without_status_starts_in_initial_status(self):
+        """An issue created without status must be accepted or rejected by the committee first."""
+        initial = IssueStatus.objects.filter(initial_status=True).first() or IssueStatusFactory(initial_status=True)
+        self.client.force_authenticate(user=self.reporter_user)
+        data = self.__get_valid_data()
+        data.pop("status", None)
+
+        response = self.client.post(self.url, data=data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Issue.objects.get().status, initial)
