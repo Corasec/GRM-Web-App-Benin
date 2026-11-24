@@ -4,6 +4,7 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 
 from authentication.models import User
+from grm.utils import normalize_phone_number
 from mail_client import send_mail_notification
 from sms_client import send_sms
 
@@ -108,7 +109,7 @@ class NotificationService:
             return False
 
         # Format phone number
-        phone = NotificationService._format_phone_number(user.phone_number)
+        phone = normalize_phone_number(user.phone_number)
 
         sms_message = message[: NotificationService.SMS_MAX_LENGTH]
 
@@ -116,26 +117,6 @@ class NotificationService:
 
         logger.info(f"SMS sent successfully to {phone}")
         return True
-
-    @staticmethod
-    def _format_phone_number(phone_number):
-        """
-        Format phone number for SMS sending.
-
-        Args:
-            phone_number (str): Raw phone number from database
-
-        Returns:
-            str: Formatted phone number with + prefix
-        """
-        # Remove spaces and special characters
-        phone = ''.join(filter(str.isdigit, phone_number))
-
-        # Add + prefix if not present
-        if not phone.startswith('+'):
-            phone = f"+{phone}"
-
-        return phone
 
     @staticmethod
     def get_users_info(user_ids):

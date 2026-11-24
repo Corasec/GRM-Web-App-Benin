@@ -5,13 +5,18 @@ from django.utils.translation import gettext as _
 
 from authentication.models import Cdata
 from grm.constants import (
+    ALERT_CHOICE,
     EMAIL_CHOICE,
     NOTIFICATION_TYPES,
     PHONE_CHOICE,
     WHATSAPP_CHOICE,
 )
+from grm.utils import normalize_phone_number
 from mail_client import send_mail_notification
 from sms_client import send_sms
+
+# Twilio splits long SMS into several parts (concatenated on the phone), up to 1600 characters.
+SMS_MAX_LENGTH = 1600
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +43,12 @@ def send_issue_notification(issue, notification_type, message_template=None):
             f"Supported types: {', '.join(sorted(NOTIFICATION_TYPES))}"
         )
 
-    # If there's no contact_method, skip notification
+    # Only citizens who asked for direct alerts are notified. Those who chose not to be contacted,
+    # or to be kept informed by the facilitator / committee who registered the issue, get nothing.
+    if issue.contact_medium != ALERT_CHOICE:
+        logger.info(f"Issue {issue.id}: citizen did not ask for direct alerts, skipping notification")
+        return False
+
     if not issue.contact_method:
         logger.info(f"Issue {issue.id}: No contact method specified, skipping notification")
         return False
@@ -58,16 +68,15 @@ def send_issue_notification(issue, notification_type, message_template=None):
         logger.error(f"Issue {issue.id}: Error retrieving contact information: {str(e)}")
         return False
 
-    # Generate message if not provided
-    if not message_template:
-        message_template = _generate_default_message(issue, notification_type)
-
     # Send according to contact method
     try:
         if issue.contact_method == EMAIL_CHOICE:
-            return _send_email_notification(issue, contact_info, notification_type, message_template)
+            message = message_template or _generate_default_message(issue, notification_type)
+            return _send_email_notification(issue, contact_info, notification_type, message)
         elif issue.contact_method in [PHONE_CHOICE, WHATSAPP_CHOICE]:
-            return _send_sms_notification(issue, contact_info, notification_type, message_template)
+            # WhatsApp needs an approved WhatsApp sender: until then, WhatsApp contacts get an SMS.
+            message = message_template or _generate_sms_message(issue, notification_type)
+            return _send_sms_notification(issue, contact_info, notification_type, message)
         else:
             logger.warning(f"Issue {issue.id}: Unknown contact method '{issue.contact_method}'")
             return False
@@ -119,11 +128,11 @@ def _send_sms_notification(issue, phone_number, notification_type, message):
     Raises:
         Exception: If SMS sending fails
     """
-    # Truncate message to 160 characters for SMS
-    sms_message = message[:160]
+    # Long messages are sent as a multi-part SMS: only cap at the provider limit.
+    sms_message = message[:SMS_MAX_LENGTH]
 
-    # Format phone number
-    phone = _format_phone_number(phone_number)
+    # International format with the country calling code
+    phone = normalize_phone_number(phone_number)
 
     try:
         send_sms(to=phone, body=sms_message)
@@ -132,26 +141,6 @@ def _send_sms_notification(issue, phone_number, notification_type, message):
     except Exception as e:
         logger.error(f"Issue {issue.id}: Failed to send SMS ({notification_type}) to {phone}: {str(e)}")
         raise
-
-
-def _format_phone_number(phone_number):
-    """
-    Format a phone number for SMS sending.
-
-    Args:
-        phone_number: Phone number string (may contain spaces, special chars, etc)
-
-    Returns:
-        str: Formatted phone number with + prefix
-    """
-    # Remove spaces and special characters
-    phone = ''.join(filter(str.isdigit, phone_number))
-
-    # Add + prefix if not present
-    if not phone.startswith('+'):
-        phone = f"+{phone}"
-
-    return phone
 
 
 def _generate_email_subject(issue, notification_type):
@@ -245,5 +234,34 @@ def _generate_default_message(issue, notification_type):
     return message_template.format(
         tracking_code=issue.tracking_code,
         status=issue.status.name if issue.status else _("Unknown"),
+        appeal_status=_("In progress") if issue.appeal_status else _("Processed"),
         additional_info=additional_info,
     )
+
+
+def _generate_sms_message(issue, notification_type):
+    """
+    Short SMS text: the tracking code comes first so it is never lost, followed by the
+    resolution / reject reason / appeal reason when relevant (never truncated at 160 characters).
+    French translations avoid accents on purpose: an SMS with accents is sent in UCS-2
+    (70 characters per part instead of 160), which doubles its cost.
+    """
+    status = issue.status.name if issue.status else _("Unknown")
+    messages = {
+        'created': _("GRM - Complaint {tracking_code} registered. Keep this code to follow your case."),
+        'status_changed': _("GRM - Complaint {tracking_code}: new status \"{status}\"."),
+        'appealed': _("GRM - Complaint {tracking_code}: your appeal has been registered."),
+        'assigned': _("GRM - Complaint {tracking_code}: taken in charge by the committee."),
+    }
+    message = messages.get(notification_type, _("GRM - Complaint {tracking_code} updated.")).format(
+        tracking_code=issue.tracking_code, status=status
+    )
+
+    if notification_type == 'status_changed':
+        if issue.research_result:
+            message += " " + _("Resolution: {text}").format(text=issue.research_result)
+        elif issue.reject_reason:
+            message += " " + _("Reason: {text}").format(text=issue.reject_reason)
+    elif notification_type == 'appealed' and issue.appeal_reason:
+        message += " " + _("Reason: {text}").format(text=issue.appeal_reason)
+    return message

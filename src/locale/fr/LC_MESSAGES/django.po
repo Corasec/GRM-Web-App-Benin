@@ -2928,3 +2928,39 @@ msgid "The setup cannot be completed until all previous steps are completed."
 msgstr ""
 "La configuration ne peut pas être terminée tant que toutes les "
 "configurations précédentes ne sont pas terminées."
+
+#: grm/notifications.py
+msgid "GRM - Complaint {tracking_code} registered. Keep this code to follow your case."
+msgstr "MGP - Plainte {tracking_code} enregistree. Conservez ce code pour suivre votre dossier."
+
+#: grm/notifications.py
+msgid "GRM - Complaint {tracking_code}: new status \"{status}\"."
+msgstr "MGP - Plainte {tracking_code} : nouveau statut \"{status}\"."
+
+#: grm/notifications.py
+msgid "GRM - Complaint {tracking_code}: your appeal has been registered."
+msgstr "MGP - Plainte {tracking_code} : votre appel a ete enregistre."
+
+#: grm/notifications.py
+msgid "GRM - Complaint {tracking_code}: taken in charge by the committee."
+msgstr "MGP - Plainte {tracking_code} : prise en charge par le comite."
+
+#: grm/notifications.py
+msgid "GRM - Complaint {tracking_code} updated."
+msgstr "MGP - Plainte {tracking_code} mise a jour."
+
+#: grm/notifications.py
+msgid "Resolution: {text}"
+msgstr "Resolution : {text}"
+
+#: grm/notifications.py
+msgid "Reason: {text}"
+msgstr "Motif : {text}"
+
+#: grm/notifications.py
+msgid "In progress"
+msgstr "En cours"
+
+#: grm/notifications.py
+msgid "Processed"
+msgstr "Traite"
