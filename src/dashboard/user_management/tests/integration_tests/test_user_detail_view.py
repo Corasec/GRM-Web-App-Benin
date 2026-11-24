@@ -41,7 +41,6 @@ class UserDetailViewTest(DashboardTestCase):
         Facilitator.objects.create(
             user=self.facilitator_user,
             administrative_region=self.root_region,
-            village_secretary=True,
         )
 
         # Create issue statuses
@@ -102,7 +101,7 @@ class UserDetailViewTest(DashboardTestCase):
         ctx = self.get_context(resp)
         assert ctx["user_type"] == FACILITATOR_CHOICE
         assert ctx["role_info"]["type_display"] == FACILITATOR_DISPLAY
-        assert ctx["role_info"]["village_secretary"] is True
+        assert ctx["role_info"]["villages"] == []
         assert (
             ctx["role_info"]["administrative_region"]
             == self.facilitator_user.facilitator.administrative_region.hierarchical_name

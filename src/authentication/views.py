@@ -24,9 +24,11 @@ from authentication.constants import (
     INVALID_INPUT_ERROR_MESSAGE,
     LOGIN_ERROR_MESSAGE,
     LOGIN_SUCCESS_MESSAGE,
+    MOBILE_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE,
     PASSWORD_RESET_REQUEST_MESSAGE,
 )
 from authentication.forms import PasswordResetRequestForm
+from authentication.mobile import build_mobile_profile, get_mobile_account_type
 from authentication.models import Citizen, User
 from authentication.serializers import (
     CitizenRegistrationSerializer,
@@ -206,6 +208,15 @@ class LoginAPIView(BaseLoginAPIView):
     )
     def post(self, request):
         return super().post(request)
+
+    def extra_validations(self, user):
+        """The mobile app is only for committee accounts and facilitators."""
+        if get_mobile_account_type(user) is None:
+            return Response(
+                {"error": MOBILE_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
 
 
 class CitizenLoginAPIView(BaseLoginAPIView):
@@ -788,6 +799,34 @@ class PasswordResetConfirmView(View):
 
         context["form"] = form
         return render(request, self.template_name, context)
+
+
+class MobileProfileAPIView(APIView):
+    """
+    Profile of the account logged in on the mobile app.
+
+    - ``account_type``: ``committee`` (CCGP, CLGP or national committee secretary: receives and
+      processes issues) or ``facilitator`` (creates and follows issues only).
+    - ``can_process_issues``: whether the account can accept, reject, resolve or escalate issues.
+    - ``committee``: department and administrative level of a committee account, else ``null``.
+    - ``location``: locations offered by the issue "location" step. ``mode`` is ``fixed``
+      (single preselected region), ``list`` (choose one of ``regions``) or ``free`` (any region).
+
+    Other accounts get a 403.
+    """
+
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Mobile account profile",
+        tags=['Authentication'],
+        responses={403: openapi.Response(description="Account not allowed on the mobile app")},
+    )
+    def get(self, request):
+        if get_mobile_account_type(request.user) is None:
+            return Response({"error": MOBILE_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE}, status=status.HTTP_403_FORBIDDEN)
+        return Response(build_mobile_profile(request.user), status=status.HTTP_200_OK)
 
 
 class FacilitatorProfileAPIView(APIView):

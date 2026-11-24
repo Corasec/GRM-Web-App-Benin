@@ -152,17 +152,9 @@
 								<h6 class="text-muted">{% translate 'Role Assignment' %}</h6>
 								<div class="row">
 									<div class="col-md-8">{% bootstrap_field facilitator_form.administrative_region %}</div>
-									<div class="col-md-4">
-										<div class="form-group">
-											<div class="form-check">
-												{{ facilitator_form.village_secretary }}
-												<label class="form-check-label"
-													   for="{{ facilitator_form.village_secretary.id_for_label }}">
-													{{ facilitator_form.village_secretary.label }}
-												</label>
-											</div>
-										</div>
-									</div>
+								</div>
+								<div class="row">
+									<div class="col-md-8">{% bootstrap_field facilitator_form.villages %}</div>
 								</div>
 								<div class="alert alert-info mt-3">
 									<i class="fas fa-info-circle"></i>
@@ -217,6 +209,25 @@
                 minimumInputLength: 1,
                 placeholder: "Search and select an administrative level",
                 allowClear: true,
+                cache: true
+            });
+
+            // Villages covered by a facilitator: leaf regions only, multiple selection
+            $('.villages').select2({
+                ajax: {
+                    url: "{% url 'dashboard:grm:get_region_choices_for_select2' %}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {q: params.term, base_regions: 1};
+                    },
+                    processResults: function (data) {
+                        return {results: data};
+                    },
+                },
+                width: '100%',
+                minimumInputLength: 1,
+                placeholder: "{% translate 'Search and select villages' %}",
                 cache: true
             });
 

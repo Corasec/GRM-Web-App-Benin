@@ -144,10 +144,10 @@ class UserUpdateViewTest(DashboardTestCase):
         """Should successfully update Facilitator administrative region"""
         facilitator_user = UserFactory()
         child_region = AdministrativeRegionFactory(parent=self.root_region)
+        village = AdministrativeRegionFactory(parent=child_region)
         Facilitator.objects.create(
             user=facilitator_user,
             administrative_region=self.root_region,
-            village_secretary=False,
         )
 
         url = reverse("dashboard:user_management:update", kwargs={"pk": facilitator_user.id})
@@ -157,7 +157,7 @@ class UserUpdateViewTest(DashboardTestCase):
             "email": facilitator_user.email,
             "phone_number": facilitator_user.phone_number,
             "administrative_region": child_region.id,
-            "village_secretary": True,
+            "villages": [village.id],
         }
 
         resp = self.post(url, data, user=self.manager)
@@ -165,7 +165,7 @@ class UserUpdateViewTest(DashboardTestCase):
 
         facilitator = Facilitator.objects.get(user=facilitator_user)
         assert facilitator.administrative_region == child_region
-        assert facilitator.village_secretary is True
+        assert list(facilitator.villages.all()) == [village]
 
     def test_update_facilitator_email(self):
         """Username changes to the value of the email"""

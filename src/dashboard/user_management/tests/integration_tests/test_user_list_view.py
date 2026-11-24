@@ -8,7 +8,7 @@ from dashboard.user_management.constants import (
     GRM_MANAGER_CHOICE,
 )
 from grm.tests.base import DashboardTestCase
-from issues.factories import IssueDepartmentFactory
+from issues.factories import AdministrativeRegionFactory, IssueDepartmentFactory
 
 
 class UserListViewTest(DashboardTestCase):
@@ -34,7 +34,6 @@ class UserListViewTest(DashboardTestCase):
         Facilitator.objects.create(
             user=self.facilitator_user,
             administrative_region=self.root_region,
-            village_secretary=False,
         )
 
         self.url = reverse("dashboard:user_management:list")
@@ -105,11 +104,15 @@ class UserListViewTest(DashboardTestCase):
         case_manager_info = next(u for u in ctx['users_with_type'] if u['user'].id == self.case_manager_user.id)
         assert "(Head)" in case_manager_info['role_info'] or "Head" in case_manager_info['role_info']
 
-    def test_role_info_for_village_secretary(self):
-        """Should show village secretary indicator for facilitators"""
+    def test_role_info_for_facilitator_shows_covered_villages(self):
+        """Should show how many villages a facilitator covers"""
         facilitator = Facilitator.objects.get(user=self.facilitator_user)
-        facilitator.village_secretary = True
-        facilitator.save()
+        facilitator.villages.set(
+            [
+                AdministrativeRegionFactory(parent=self.root_region),
+                AdministrativeRegionFactory(parent=self.root_region),
+            ]
+        )
 
         resp = self.get(
             f"{self.url}?user_type={FACILITATOR_CHOICE}",
@@ -118,7 +121,4 @@ class UserListViewTest(DashboardTestCase):
         )
         ctx = self.get_context(resp)
         facilitator_info = next(u for u in ctx['users_with_type'] if u['user'].id == self.facilitator_user.id)
-        assert (
-            "(Village Secretary)" in facilitator_info['role_info']
-            or "Village Secretary" in facilitator_info['role_info']
-        )
+        assert "Covered villages: 2" in facilitator_info['role_info']
