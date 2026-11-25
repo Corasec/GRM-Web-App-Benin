@@ -67,6 +67,46 @@ If the domain name is not `mgp.coso.gouv.bj`, change `server_name` in `nginx/def
 
 ---
 
+### 2.1 Replacing an older deployment (start from an empty database)
+
+The new stack has its own PostgreSQL container and volumes (`grm_pg_data`, `grm_media`, `grm_static`):
+it never reuses an older database. To start clean on a VM that ran an older version:
+
+```bash
+# 1. Inventory: containers, volumes and where the old database lives (container or PostgreSQL on the host)
+docker ps -a --format '{{.Names}}\t{{.Image}}\t{{.Ports}}'
+docker volume ls
+grep -h DATABASE_URL /path/to/old/deployment/*.env 2>/dev/null   # host and database name, if any
+
+# 2. Backup before deleting (keep the files off the VM)
+#    old database in a container:
+docker exec <old-postgres-container> pg_dump -U <user> <database> | gzip > old-db-$(date +%F).sql.gz
+#    old database on the host:
+sudo -u postgres pg_dump <database> | gzip > old-db-$(date +%F).sql.gz
+#    old uploads, if a media folder or volume exists:
+tar czf old-media-$(date +%F).tar.gz -C /path/to/old/media .
+
+# 3. Stop the old stack and free port 80 (old nginx / certbot containers included)
+cd /path/to/old/deployment && docker compose down
+docker ps          # nothing of the old stack must remain
+
+# 4. Delete the old data
+#    old database in a container: remove its containers and volumes (in the OLD folder only)
+cd /path/to/old/deployment && docker compose down -v
+#    old database on the host: drop it (the new stack does not use the host PostgreSQL)
+sudo -u postgres psql -c 'DROP DATABASE <database>;'
+
+# 5. If the new stack was already started once (test run), drop its volumes too
+cd /opt/grm && docker compose down -v
+```
+
+Then start the new stack (step 3): the database is created empty and the migrations run automatically.
+
+- `POSTGRES_USER` / `POSTGRES_PASSWORD` are only applied when the `grm_pg_data` volume is created. To
+  change them later, either change them inside PostgreSQL or drop the volume (`docker compose down -v`,
+  which deletes the data).
+- Remove the images of the old version once everything works: `docker image prune -a`.
+
 ## 3. Start
 
 ```bash
