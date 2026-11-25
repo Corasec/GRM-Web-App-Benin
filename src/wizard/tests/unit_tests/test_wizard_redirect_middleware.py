@@ -43,16 +43,20 @@ class TestWizardRedirectMiddleware(TestCase):
         resp = self.client.get(self.customization_url)
         assert resp.status_code == 404
 
-    def test_wizard_url_raises_404_for_all_users_if_wizard_complete(self):
-        """All types of users get 404 if wizard is complete."""
+    def test_wizard_url_redirects_to_the_dashboard_once_wizard_complete(self):
+        """The wizard is closed once finished: /wizard/ leads to the dashboard (e.g. reload after Save and Finish)."""
         WizardSection.objects.update(status=COMPLETED_CHOICE)
-        self.client.force_login(self.normal_user)
-        resp = self.client.get(self.customization_url)
-        assert resp.status_code == 404
+        for user in (self.normal_user, self.grm_owner_user):
+            self.client.force_login(user)
+            resp = self.client.get(self.customization_url)
+            assert resp.status_code == 302
+            assert resp.url == self.dashboard
 
-        self.client.force_login(self.grm_owner_user)
+    def test_wizard_url_sends_anonymous_users_to_login_once_wizard_complete(self):
+        WizardSection.objects.update(status=COMPLETED_CHOICE)
         resp = self.client.get(self.customization_url)
-        assert resp.status_code == 404
+        assert resp.status_code == 302
+        assert resp.url == self.login_url
 
     def test_other_dashboard_url_redirects_if_wizard_incomplete(self):
         """Other dashboard URLs should redirect to wizard if wizard is missing or incomplete."""
