@@ -16,6 +16,7 @@ class WizardRedirectMiddleware:
         self.customization_url = reverse("wizard:customization_wizard")
         self.login_url = reverse("dashboard:authentication:login")
         self.logout_url = reverse("dashboard:authentication:logout")
+        self.dashboard_url = reverse("dashboard:diagnostics:home")
 
         self.exempt_urls_incomplete_manager = {self.logout_url, self.customization_url}
         self.exempt_urls_incomplete_non_manager = {self.login_url, self.logout_url}
@@ -34,7 +35,9 @@ class WizardRedirectMiddleware:
         # Wizard complete
         if WizardSection.wizard_setup_is_completed():
             if request.path == self.customization_url:
-                raise Http404()
+                # The wizard is closed once finished: send people to the dashboard instead of a 404
+                # (the browser may reload /wizard/ right after "Save and Finish")
+                return redirect(self.dashboard_url if request.user.is_authenticated else self.login_url)
         else:
             # Wizard incomplete
             if request.user.is_authenticated and request.user.grm_owner:
