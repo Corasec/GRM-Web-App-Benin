@@ -40,24 +40,39 @@ docker run --rm --entrypoint sh cosobenin/grm-app:v.2.1.1 -c \
 
 Requirements: Docker Engine with the `docker compose` plugin, port 80 reachable by the domain provider.
 
-Copy these files from the repository to a folder on the VM, e.g. `/opt/grm/`:
+> **COSO VM** (`cosowebapp1`, user `coso`): deployment folder **`~/docker-app/`**, Docker commands run
+> with `sudo`. Layout:
+>
+> ```
+> ~/docker-app/
+> ├── docker-compose.yaml          # from docker/app/docker-compose.yaml
+> ├── .env                         # from docker/app/.env.example, filled (never committed)
+> ├── nginx/default.conf           # from docker/app/nginx/default.conf
+> └── docker-compose.yaml_25112026 # old compose (project "docker-app"), kept for reference
+> ```
+>
+> Compose project name: `grm` (containers `grm-*`, volumes `grm_pg_data`, `grm_media`, `grm_static`).
+> First deployment of this stack: 25 November 2026, image `v.2.1.1`.
+> Avoid `$` in `.env` values (passwords): Compose reads `$name` as a variable and cuts the value.
+
+Copy these files from the repository to the deployment folder of the VM (`~/docker-app/` on the COSO VM):
 
 | Repository file | On the VM |
 |---|---|
-| `docker/app/docker-compose.yaml` | `/opt/grm/docker-compose.yaml` |
-| `docker/app/nginx/default.conf` | `/opt/grm/nginx/default.conf` |
-| `docker/app/.env.example` | `/opt/grm/.env` (then edit it) |
+| `docker/app/docker-compose.yaml` | `~/docker-app/docker-compose.yaml` |
+| `docker/app/nginx/default.conf` | `~/docker-app/nginx/default.conf` |
+| `docker/app/.env.example` | `~/docker-app/.env` (then edit it) |
 
 ```bash
-scp docker/app/docker-compose.yaml        user@vm:/opt/grm/
-scp docker/app/nginx/default.conf         user@vm:/opt/grm/nginx/
-scp docker/app/.env.example               user@vm:/opt/grm/.env
+scp docker/app/docker-compose.yaml        coso@<vm>:~/docker-app/
+scp docker/app/nginx/default.conf         coso@<vm>:~/docker-app/nginx/
+scp docker/app/.env.example               coso@<vm>:~/docker-app/.env
 ```
 
-Edit `/opt/grm/.env` (every variable is commented in the file). At least:
+Edit `~/docker-app/.env` (every variable is commented in the file). At least:
 
 - `GRM_IMAGE` — the tag pushed in step 1;
-- `SECRET_KEY` — generate one: `docker run --rm python:3.12-slim python -c "import secrets; print(secrets.token_urlsafe(50))"`;
+- `SECRET_KEY` — generate one: `sudo docker run --rm python:3.12-slim python -c "import secrets; print(secrets.token_urlsafe(50))"`;
 - `POSTGRES_PASSWORD` **and the same password** in `DATABASE_URL` (`postgres://grm:<password>@db:5432/grm`);
 - `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` — the public domain (`mgp.coso.gouv.bj`, `https://mgp.coso.gouv.bj`);
 - `BEHIND_HTTPS_PROXY=True` (the domain provider does HTTPS);
@@ -74,30 +89,33 @@ it never reuses an older database. To start clean on a VM that ran an older vers
 
 ```bash
 # 1. Inventory: containers, volumes and where the old database lives (container or PostgreSQL on the host)
-docker ps -a --format '{{.Names}}\t{{.Image}}\t{{.Ports}}'
-docker volume ls
+sudo docker ps -a --format '{{.Names}}\t{{.Image}}\t{{.Ports}}'
+sudo docker volume ls
 grep -h DATABASE_URL /path/to/old/deployment/*.env 2>/dev/null   # host and database name, if any
 
 # 2. Backup before deleting (keep the files off the VM)
 #    old database in a container:
-docker exec <old-postgres-container> pg_dump -U <user> <database> | gzip > old-db-$(date +%F).sql.gz
+sudo docker exec <old-postgres-container> pg_dump -U <user> <database> | gzip > old-db-$(date +%F).sql.gz
 #    old database on the host:
 sudo -u postgres pg_dump <database> | gzip > old-db-$(date +%F).sql.gz
 #    old uploads, if a media folder or volume exists:
 tar czf old-media-$(date +%F).tar.gz -C /path/to/old/media .
 
 # 3. Stop the old stack and free port 80 (old nginx / certbot containers included)
-cd /path/to/old/deployment && docker compose down
-docker ps          # nothing of the old stack must remain
+cd /path/to/old/deployment && sudo docker compose down
+#    if the new docker-compose.yaml already replaced the old one in that folder, "down" finds nothing
+#    (the new file is project "grm"): use the old file and the old project name (folder name), e.g. on COSO:
+sudo docker compose -f docker-compose.yaml_25112026 -p docker-app down
+sudo docker ps          # nothing of the old stack must remain
 
 # 4. Delete the old data
 #    old database in a container: remove its containers and volumes (in the OLD folder only)
-cd /path/to/old/deployment && docker compose down -v
+cd /path/to/old/deployment && sudo docker compose down -v
 #    old database on the host: drop it (the new stack does not use the host PostgreSQL)
 sudo -u postgres psql -c 'DROP DATABASE <database>;'
 
 # 5. If the new stack was already started once (test run), drop its volumes too
-cd /opt/grm && docker compose down -v
+cd ~/docker-app && sudo docker compose down -v
 ```
 
 Then start the new stack (step 3): the database is created empty and the migrations run automatically.
@@ -110,10 +128,10 @@ Then start the new stack (step 3): the database is created empty and the migrati
 ## 3. Start
 
 ```bash
-cd /opt/grm
-docker compose pull
-docker compose up -d --wait   # returns once everything is started (first start: ~1 min)
-docker compose ps             # every service "running", db and django-app "healthy"
+cd ~/docker-app
+sudo docker compose pull
+sudo docker compose up -d --wait   # returns once everything is started (first start: ~1 min)
+sudo docker compose ps             # every service "running", db and django-app "healthy"
 ```
 
 **Migrations and static files are automatic.** At each start the `django-app` container runs `migrate`, then `collectstatic`, then starts gunicorn (`src/run.sh serve`). Nothing to run by hand, also after an update.
@@ -141,8 +159,8 @@ Nothing to configure, no crontab, nothing to tick in the admin. When `celery-bea
 Check that they are registered and running:
 
 ```bash
-docker compose logs --tail=50 celery-beat      # "beat: Starting..." then, after 5 min, "Sending due task check issues ..."
-docker compose logs --tail=50 celery-worker    # "Task grm.tasks.check_issues[...] succeeded"
+sudo docker compose logs --tail=50 celery-beat      # "beat: Starting..." then, after 5 min, "Sending due task check issues ..."
+sudo docker compose logs --tail=50 celery-worker    # "Task grm.tasks.check_issues[...] succeeded"
 ```
 
 The first jobs run 5 minutes after the start: an issue reported from the app is assigned to its committee within 5 minutes.
@@ -158,7 +176,7 @@ The first jobs run 5 minutes after the start: an issue reported from the app is 
 The setup wizard is only open to a user flagged **GRM owner**; user management needs **GRM manager**; the Django admin and revealing complainant contacts need **superuser**. One command creates this user with the three roles (the password is asked twice):
 
 ```bash
-docker compose exec django-app ./run.sh django create_grm_owner --email admin@mgp.bj --first-name Admin --last-name MGP
+sudo docker compose exec django-app ./run.sh django create_grm_owner --email admin@mgp.bj --first-name Admin --last-name MGP
 ```
 
 Running it again on an existing email upgrades that user (and optionally resets the password).
@@ -170,12 +188,15 @@ Running it again on an existing email upgrades that user (and optionally resets 
 1. Open `https://<domain>/` and log in with the administrator **email** and password: you land on the wizard.
 2. Card **"Import from Excel"** → choose `config-coso/import_configuration_coso.xlsx` → *Import*. Every step is filled (levels, 952 regions, committees and deadlines, types and categories, age groups, components).
 3. You land on the **Summary**: review it, then **Save and Finish**. The dashboard opens for everybody.
+   With image `v.2.1.1`, the browser may show a 404 on `/wizard/` right after *Save and Finish*: the setup
+   is saved, open `https://<domain>/diagnostics/`. (Fixed in the next image: `/wizard/` then leads to the
+   dashboard.)
 
 The same import from the command line (copy the file into the container first):
 
 ```bash
-docker compose cp import_configuration_coso.xlsx django-app:/tmp/
-docker compose exec django-app ./run.sh django import_configuration /tmp/import_configuration_coso.xlsx
+sudo docker compose cp import_configuration_coso.xlsx django-app:/tmp/
+sudo docker compose exec django-app ./run.sh django import_configuration /tmp/import_configuration_coso.xlsx
 ```
 
 then finish the wizard summary in the browser. File format: `docs/excel-import.md`.
@@ -185,8 +206,8 @@ then finish the wizard summary in the browser. File format: `docs/excel-import.m
 Dashboard → **User Management → "Import accounts from Excel"** → `config-coso/import_comptes_coso.xlsx`, and type the **initial password** given to every account (at least 8 characters with letters and digits). Or:
 
 ```bash
-docker compose cp import_comptes_coso.xlsx django-app:/tmp/
-docker compose exec django-app ./run.sh django import_accounts /tmp/import_comptes_coso.xlsx   # asks the password
+sudo docker compose cp import_comptes_coso.xlsx django-app:/tmp/
+sudo docker compose exec django-app ./run.sh django import_accounts /tmp/import_comptes_coso.xlsx   # asks the password
 ```
 
 Result: 876 committee accounts (CCGP per village, CLGP per commune, national committee) and 110 field staff accounts (FC, SC) with their villages. Login identifier = email (`ccgp.<village>@mgp.bj`, `clgp.<commune>@mgp.bj`, `cnational@mgp.bj`, `fc|sc.<prénom>.<nom>@mgp.bj`).
@@ -208,9 +229,9 @@ When the test is over and before the opening, remove the test data **once**:
 
 ```bash
 # 1. see what will be deleted (nothing is changed)
-docker compose exec django-app ./run.sh django purge_test_data --until 2026-12-05 --dry-run
+sudo docker compose exec django-app ./run.sh django purge_test_data --until 2026-12-05 --dry-run
 # 2. delete (asks to type PURGER); --reactivate-accounts reactivates the accounts deactivated during the test
-docker compose exec django-app ./run.sh django purge_test_data --until 2026-12-05 --reactivate-accounts
+sudo docker compose exec django-app ./run.sh django purge_test_data --until 2026-12-05 --reactivate-accounts
 ```
 
 - `--until` is the **last day of the test**. The command refuses to run if an issue or a comment is more
@@ -236,9 +257,9 @@ The APK must point to the production API: set `API_AUTH_BASE_URL=https://<domain
 # on your machine
 docker build -t cosobenin/grm-app:v.2.2.0 GRM-Web-App-Benin/src && docker push cosobenin/grm-app:v.2.2.0
 # on the VM
-cd /opt/grm
+cd ~/docker-app
 sed -i 's#^GRM_IMAGE=.*#GRM_IMAGE=cosobenin/grm-app:v.2.2.0#' .env
-docker compose pull && docker compose up -d     # migrations run automatically
+sudo docker compose pull && sudo docker compose up -d     # migrations run automatically
 ```
 
 Rollback: put the previous tag back in `.env` and `docker compose up -d` (only if the new version added no migration that the old one cannot read).
@@ -250,11 +271,11 @@ Rollback: put the previous tag back in `.env` and `docker compose up -d` (only i
 Two things hold data: the **database** and the **media volume** (attachments, photos).
 
 ```bash
-cd /opt/grm
+cd ~/docker-app
 # database
-docker compose exec -T db pg_dump -U grm grm | gzip > backup-db-$(date +%F).sql.gz
+sudo docker compose exec -T db pg_dump -U grm grm | gzip > backup-db-$(date +%F).sql.gz
 # attachments and photos
-docker run --rm -v grm_media:/media -v "$PWD":/backup alpine tar czf /backup/backup-media-$(date +%F).tar.gz -C /media .
+sudo docker run --rm -v grm_media:/media -v "$PWD":/backup alpine tar czf /backup/backup-media-$(date +%F).tar.gz -C /media .
 ```
 
 Restore the database into an empty one: `gunzip -c backup-db-XXXX.sql.gz | docker compose exec -T db psql -U grm grm`.
@@ -266,12 +287,12 @@ Schedule these two commands with the VM crontab (e.g. every night) and copy the 
 ## 7. Useful commands
 
 ```bash
-docker compose ps                                   # state of the services
-docker compose logs -f django-app                   # application logs (also: celery-worker, celery-beat, nginx)
-docker compose exec django-app ./run.sh django shell # Django shell
-docker compose exec django-app ./run.sh django <command>
-docker compose restart django-app                   # after changing .env: docker compose up -d
-docker compose down                                 # stop (volumes / data are kept)
+sudo docker compose ps                                   # state of the services
+sudo docker compose logs -f django-app                   # application logs (also: celery-worker, celery-beat, nginx)
+sudo docker compose exec django-app ./run.sh django shell # Django shell
+sudo docker compose exec django-app ./run.sh django <command>
+sudo docker compose restart django-app                   # after changing .env: sudo docker compose up -d
+sudo docker compose down                                 # stop (volumes / data are kept)
 ```
 
 **Do not run** `docker compose down -v`: it deletes the database and the attachments.
