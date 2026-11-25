@@ -47,3 +47,21 @@ venv/
 ENV/
 
 db.sqlite3
+
+# --- Never ship local data in the (public) image -------------------------------------------
+# Spreadsheets (account lists, COSO configuration: personal data), local uploads and logs
+**/*.xlsx
+**/*.xls
+**/*.csv
+**/*.ods
+media/
+attachments/
+staticfiles/
+**/logs/
+**/*.log
+dashboard/adls/
+# Local settings variants (settings.py only loads local_settings.py or the template)
+grm/local_settings_.py
+grm/.env
+**/*.sqlite3
+.pytest_cache/
