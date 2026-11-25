@@ -15,14 +15,24 @@ Internet ──HTTPS──> domain provider ──HTTP──> VM:80 nginx ──
 
 ```bash
 cd GRM-Web-App-Benin/src
-docker build -t cosobenin/grm-app:v.2.1.0 .
-docker push cosobenin/grm-app:v.2.1.0
+docker build -t cosobenin/grm-app:v.2.1.1 .
+docker push cosobenin/grm-app:v.2.1.1
 ```
 
 Use a new tag for every release (never overwrite a tag): it makes rollbacks a one-line change.
-Tags so far: `v.1.0.8`, `v.2.0.0` (before the field audit), **`v.2.1.0`** (field deployment, November 2026:
-committee routing, escalation, deadlines, Excel imports, password change, GRM configuration page).
+Tags so far: `v.1.0.8`, `v.2.0.0` (before the field audit), **`v.2.1.1`** (field deployment, November 2026:
+committee routing, escalation, deadlines, Excel imports, password change, GRM configuration page, test
+data purge). `v.2.0.0` and the first `v.2.1.0` contained local files (spreadsheets, media) and must be
+deleted from Docker Hub; `src/.dockerignore` now keeps local data out of the image.
 Put the tag of the release in `GRM_IMAGE` (`.env` on the VM).
+
+**Before every push, check that no local data is in the image** (the Docker Hub repository is public):
+
+```bash
+docker run --rm --entrypoint sh cosobenin/grm-app:v.2.1.1 -c \
+  'cd /usr/appserver; find . -name "*.xlsx" -not -path "*/site-packages/*"; ls media attachments 2>/dev/null'
+# must print nothing
+```
 
 ---
 
@@ -149,7 +159,32 @@ Result: 876 committee accounts (CCGP per village, CLGP per commune, national com
 
 Nothing is required. Useful views: *Periodic tasks* (scheduled jobs, all enabled), *Users*, *Government workers* (committee accounts), *Facilitators* (role FC / SC, covered villages).
 
-### 4.5 Mobile application
+### 4.5 Field acceptance test, then opening
+
+Run the acceptance test on this production server **before** the GRM is opened to the field (checklist
+`recette-emgp.html`): the imported accounts of one test village are used, nothing needs to be created.
+
+When the test is over and before the opening, remove the test data **once**:
+
+```bash
+# 1. see what will be deleted (nothing is changed)
+docker compose exec django-app ./run.sh django purge_test_data --until 2026-12-05 --dry-run
+# 2. delete (asks to type PURGER); --reactivate-accounts reactivates the accounts deactivated during the test
+docker compose exec django-app ./run.sh django purge_test_data --until 2026-12-05 --reactivate-accounts
+```
+
+- `--until` is the **last day of the test**. The command refuses to run if an issue or a comment is more
+  recent, so it can never delete real issues after the opening.
+- It deletes every issue with its history, comments, attachments (files included), the encrypted
+  complainant names / contacts, the notification logs and the dashboard statistics; issue numbers restart
+  at 1. The configuration, the categorisation and the accounts are kept.
+- Give the initial password back to the test accounts whose password was changed (dashboard, *Reset
+  password*).
+- **Clear the app data on the test phones** (Android settings → Apps → eMGP → Storage → Clear data, or
+  uninstall / reinstall): they still hold the test issues locally. Phones installed after the purge are
+  not concerned.
+
+### 4.6 Mobile application
 
 The APK must point to the production API: set `API_AUTH_BASE_URL=https://<domain>` in `grm-mobile/config.prod/index.js`, then build the APK as described in `grm-mobile/README.md` (*Building the App*) and distribute it.
 
